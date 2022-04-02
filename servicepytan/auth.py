@@ -1,11 +1,7 @@
 """Main module."""
-# MODULES
 import requests
 import json
-
-# GLOBALS
-AUTH_ROOT = "https://auth.servicetitan.io"
-URL_ROOT = "https://api.servicetitan.io"
+from servicepytan import URL_ROOT, AUTH_ROOT
 
 def test():
   return URL_ROOT
