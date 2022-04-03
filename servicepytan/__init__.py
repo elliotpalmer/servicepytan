@@ -12,7 +12,7 @@ import json
 AUTH_ROOT = "https://auth.servicetitan.io"
 URL_ROOT = "https://api.servicetitan.io"
 
-from servicepytan import auth
-from servicepytan import jpm
-from servicepytan import telecom
+# from servicepytan import auth
+# from servicepytan import jpm
+# from servicepytan import telecom
 
