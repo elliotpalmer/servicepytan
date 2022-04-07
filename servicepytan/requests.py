@@ -23,6 +23,7 @@ class Endpoint:
     print(query)
     response = self.get_many(query)
     data = response["data"]
+    if data == []: return []
     has_more = response["hasMore"]
     while has_more:
       query["page"] = str(int(query["page"]) + 1)

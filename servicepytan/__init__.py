@@ -12,4 +12,5 @@ import json
 AUTH_ROOT = "https://auth.servicetitan.io"
 URL_ROOT = "https://api.servicetitan.io"
 
-from servicepytan.requests import *
+from servicepytan.requests import Endpoint
+from servicepytan.data import DataService
