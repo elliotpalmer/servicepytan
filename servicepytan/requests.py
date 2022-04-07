@@ -37,12 +37,12 @@ class Endpoint:
     url = endpoint_url(self.folder, self.endpoint, key_file=self.key_file)
     return request_json(url, options={}, payload=payload, key_file=self.key_file, request_type="POST")
 
-  def update(self, id, payload, modifier=""):
+  def update(self, id, payload, modifier="", request_type="PUT"):
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, key_file=self.key_file)
-    return request_json(url, options={}, payload=payload, key_file=self.key_file, request_type="PUT")
+    return request_json(url, options={}, payload=payload, key_file=self.key_file, request_type=request_type)
 
-  def delete(id):
-    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"", key_file=self.key_file)
+  def delete(id, modifier=""):
+    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}", key_file=self.key_file)
     return request_json(url, options={}, payload="", key_file=self.key_file, request_type="DEL")
 
   def delete_subitem(id, modifier_id, modifier):
