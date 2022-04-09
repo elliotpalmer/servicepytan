@@ -1,4 +1,4 @@
-import dateutil.parser as date_parser
+from dateutil.parser import parse
 import pytz
 
 def convert_date_to_api_format(date, timezone=""):
@@ -17,7 +17,7 @@ def convert_date_to_api_format(date, timezone=""):
   return formatted_date
 
 def _parse_date_string(date_string):
-  return date_parser.parse(date_string)
+  return parse(date_string)
 
 def _change_timezones(datetime_object, timezone):
     timezone = pytz.timezone(timezone)
