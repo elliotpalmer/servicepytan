@@ -11,7 +11,7 @@ Welcome to servicepytan's documentation!
    :caption: Contents:
 
    quickstart
-   source/servicepytan
+   source/modules
    
 
 Indices and tables
