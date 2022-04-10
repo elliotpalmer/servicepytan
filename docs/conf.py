@@ -54,3 +54,4 @@ html_theme = 'alabaster'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 extensions = ["myst_parser", "sphinx.ext.autodoc"]
+html_theme = 'furo'
