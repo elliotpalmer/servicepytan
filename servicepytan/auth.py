@@ -20,6 +20,9 @@ def get_auth_token(client_id, client_secret):
   return json.loads(response.text)
 
 def get_auth_token_by_file(config_file='servicepytan_config.json'):
+  """
+  Get an authorization token
+  """
   # Read File
   f = open(config_file)
   creds = json.load(f)

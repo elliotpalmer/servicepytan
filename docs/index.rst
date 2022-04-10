@@ -10,7 +10,9 @@ Welcome to servicepytan's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   quickstart
+   api
+   
 
 Indices and tables
 ==================
