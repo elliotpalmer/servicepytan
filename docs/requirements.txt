@@ -3,3 +3,4 @@ python-dateutil==2.8.2
 pytz==2022.1
 myst-parser==0.17.0
 Sphinx==4.5.0
+furo==2022.4.7
