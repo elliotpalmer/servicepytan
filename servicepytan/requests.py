@@ -41,10 +41,10 @@ class Endpoint:
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, config_file=self.config_file)
     return request_json(url, options={}, payload=payload, config_file=self.config_file, request_type=request_type)
 
-  def delete(id, modifier=""):
+  def delete(self, id, modifier=""):
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}", config_file=self.config_file)
     return request_json(url, options={}, payload="", config_file=self.config_file, request_type="DEL")
 
-  def delete_subitem(id, modifier_id, modifier):
+  def delete_subitem(self, id, modifier_id, modifier):
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}/{modifier_id}", config_file=self.config_file)
     return request_json(url, options={}, payload="", config_file=self.config_file, request_type="DEL")
