@@ -44,4 +44,4 @@ Login using your ServiceTitan credentials.
 ## Next Steps
 Once you've generated the `Client Secret`, you have completed all of the steps necessary to complete your first request.
 
-*  [Quick Start Guide](./quickstart.md)
+*  [Back to Quickstart](./index.rst)
