@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../servicepytan'))
+sys.path.insert(0, os.path.abspath(os.path.join('..','servicepytan')))
 
 
 # -- Project information -----------------------------------------------------
