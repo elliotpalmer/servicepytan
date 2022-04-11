@@ -3,15 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to servicepytan's documentation!
+servicepytan
 ========================================
+A library
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Table of Contents:
 
    quickstart
-   source/modules
+   modules
+   reference
    
 
 Indices and tables
