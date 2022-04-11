@@ -9,8 +9,10 @@ make html
 * How to run the autodoc setup
 ```bash
 cd docs
-sphinx-apidoc -o source ../servicepytan -e
-```
+sphinx-apidoc -o source ../servicepytan
+
+## Documenting Python Packages in Sphinx Tutorial 
+https://brendanhasz.github.io/2019/01/05/sphinx.html#autodoc-extension
 
 ## Guide to Documenting with Sphinx
 https://betterprogramming.pub/auto-documenting-a-python-project-using-sphinx-8878f9ddc6e9
