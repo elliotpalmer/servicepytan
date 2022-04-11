@@ -1,11 +1,23 @@
-"""Main module."""
+"""Authenticating with ServiceTitan API"""
+
 import requests
 import json
 from servicepytan import URL_ROOT, AUTH_ROOT
 
 def get_auth_token(client_id, client_secret):
-  """
-  Method for authorizing with ServiceTitan API
+  """Fetches Auth Token.
+
+  Retrieves authentication token for completing a request against the API
+
+  Args:
+      client_id: String, provided from the integration settings
+      client_secret: String, provided from the integration settings
+
+  Returns:
+      Authentication token
+
+  Raises:
+      TBD
   """
 
   url = f"{AUTH_ROOT}/connect/token"
@@ -20,8 +32,18 @@ def get_auth_token(client_id, client_secret):
   return json.loads(response.text)
 
 def get_auth_token_by_file(config_file='servicepytan_config.json'):
-  """
-  Get an authorization token
+  """Fetches Auth Token using the config_file.
+
+  Retrives the CLIENT_ID and CLIENT_SECRET entries in config_file.
+
+  Args:
+      config_file: String, path to the config file defaults to 'servicepytan_config.json'
+
+  Returns:
+      Authentication token
+
+  Raises:
+      TBD
   """
   # Read File
   f = open(config_file)
