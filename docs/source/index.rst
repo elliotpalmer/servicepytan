@@ -22,7 +22,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-# This is some test text for updating our project.
-
-* Sections
