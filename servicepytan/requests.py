@@ -1,4 +1,4 @@
-from servicepytan.utils import request_json, check_default_options, endpoint_url, get_folder_and_path
+from servicepytan.utils import request_json, check_default_options, endpoint_url
 class Endpoint:
   """Primary class for interacting with the API by establishing an endpoint object.
 
