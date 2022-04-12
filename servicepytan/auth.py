@@ -34,7 +34,7 @@ def get_auth_token(client_id, client_secret):
 def get_auth_token_by_file(config_file='servicepytan_config.json'):
   """Fetches Auth Token using the config_file.
 
-  Retrives the CLIENT_ID and CLIENT_SECRET entries in config_file.
+  Retrives the CLIENT_ID and CLIENT_SECRET entries from config_file.
 
   Args:
       config_file: String, path to the config file defaults to 'servicepytan_config.json'
@@ -54,6 +54,19 @@ def get_auth_token_by_file(config_file='servicepytan_config.json'):
   return get_auth_token(client_id, client_secret)["access_token"]
 
 def get_app_key(config_file='servicepytan_config.json'):
+  """Fetches App Key from the config_file.
+
+  Retrives the APP_KEY entry from config_file.
+
+  Args:
+      config_file: String, path to the config file defaults to 'servicepytan_config.json'
+
+  Returns:
+      App Key
+
+  Raises:
+      TBD
+  """
   f = open(config_file)
   creds = json.load(f)
   app_key = creds['APP_KEY']
@@ -61,6 +74,19 @@ def get_app_key(config_file='servicepytan_config.json'):
   return app_key
 
 def get_tenant_id(config_file='servicepytan_config.json'):
+  """Fetches Tenant ID from the config_file.
+
+  Retrives the TENANT_ID entry from config_file.
+
+  Args:
+      config_file: String, path to the config file defaults to 'servicepytan_config.json'
+
+  Returns:
+      Tenant ID
+
+  Raises:
+      TBD
+  """
   f = open(config_file)
   creds = json.load(f)
   tenant_id = creds['TENANT_ID']
@@ -68,7 +94,20 @@ def get_tenant_id(config_file='servicepytan_config.json'):
   return tenant_id 
 
 def get_auth_headers(config_file='servicepytan_config.json'):
-   return {
+  """Generates the Authentication Headers for each API request
+
+  Creates an object that includes the auth token and app key formatted to create the auth headers.
+
+  Args:
+      config_file: String, path to the config file defaults to 'servicepytan_config.json'
+
+  Returns:
+      Object
+
+  Raises:
+      TBD
+  """
+  return {
       "Authorization": get_auth_token_by_file(config_file),
       "ST-App-Key": get_app_key(config_file)
   }
