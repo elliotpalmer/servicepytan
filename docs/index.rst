@@ -30,6 +30,9 @@ Recommended, create a virtual environment::
 
 Install ServicePython from Github::
 
+   pip install servicepytan
+
+   # For the most up to date version
    pip install git+https://github.com/elliotpalmer/servicepytan
    
 Create Configuration File
