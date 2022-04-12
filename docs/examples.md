@@ -1,6 +1,8 @@
 # Examples
 
-## Get Completed Jobs Between Dates
+## Completed Jobs
+
+### Get Completed Jobs Between Dates
 
 ```python
 import servicepytan
@@ -29,7 +31,7 @@ jobs_data = job_json['data']
 print(f"Number of Jobs Returned: {len(jobs_data)}")
 ```
 
-## Get Completed Jobs using DataService
+### Get Completed Jobs using DataService
 
 ```python
 import servicepytan
