@@ -27,5 +27,18 @@ jobs_data = job_json['data']
 
 # Print the number of records to simplify the output
 print(f"Number of Jobs Returned: {len(jobs_data)}")
-
 ```
+
+## Get Completed Jobs using DataService
+
+```python
+import servicepytan
+
+st_data_service = servicepytan.DataService()
+
+data = st_data_service.get_jobs_completed_between("2022-04-06", "2022-04-07")
+
+print(f"Number of Jobs Returned {len(data)}")
+```
+
+##
