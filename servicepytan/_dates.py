@@ -3,7 +3,7 @@
 from dateutil.parser import parse
 import pytz
 
-def convert_date_to_api_format(date, timezone=""):
+def _convert_date_to_api_format(date, timezone=""):
   """Converts a date into ISO format compatible with API endpoint parameters.
 
   The function will either format the date as is if no timezone is provided or convert to UTC from

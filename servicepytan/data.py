@@ -1,6 +1,6 @@
 """Provides methods for simplified and opininated ways of retrieving data from the ServiceTitan API"""
 from servicepytan.requests import Endpoint
-from servicepytan.dates import convert_date_to_api_format
+from servicepytan._dates import _convert_date_to_api_format
 from servicepytan.utils import get_timezone_by_file
 class DataService:
   """Primary class for executing data methods.
@@ -23,12 +23,20 @@ class DataService:
     for status in job_status:
       options = {
         "jobStatus": status,
-        "completedOnOrAfter": convert_date_to_api_format(start_date, self.timezone),
-        "completedBefore": convert_date_to_api_format(end_date, self.timezone)
+        "completedOnOrAfter": _convert_date_to_api_format(start_date, self.timezone),
+        "completedBefore": _convert_date_to_api_format(end_date, self.timezone)
       }
       data.extend(Endpoint("jpm", "jobs").get_all(options))
     
     return data
+
+  def get_jobs_created_between(self, start_date, end_date):
+    """Retrieve all jobs created between the start and end date"""
+    options = {
+      "createdOnOrAfter": _convert_date_to_api_format(start_date, self.timezone),
+      "createdBefore": _convert_date_to_api_format(end_date, self.timezone)
+    }
+    return Endpoint("jpm", "jobs").get_all(options)
 
   def get_appointments_between(self, start_date, end_date, appointment_status=["Scheduled", "Dispatched", "Working","Done"]):
     """Retrieve all appointments that start between the start and end date"""
@@ -36,8 +44,8 @@ class DataService:
     for status in appointment_status:
       options = {
         "status": status,
-        "startsOnOrAfter":convert_date_to_api_format(start_date, self.timezone),
-        "startsBefore":convert_date_to_api_format(end_date, self.timezone)
+        "startsOnOrAfter":_convert_date_to_api_format(start_date, self.timezone),
+        "startsBefore":_convert_date_to_api_format(end_date, self.timezone)
       }
       data.extend(Endpoint("jpm", "appointments").get_all(options))
     
@@ -47,8 +55,8 @@ class DataService:
     """Retrieve all sold estimates that sold between the start and end date"""
     options = {
         "active": "True",
-        "soldAfter":convert_date_to_api_format(start_date, self.timezone),
-        "soldBefore":convert_date_to_api_format(end_date, self.timezone)
+        "soldAfter":_convert_date_to_api_format(start_date, self.timezone),
+        "soldBefore":_convert_date_to_api_format(end_date, self.timezone)
       }
     return Endpoint("sales", "estimates").get_all(options)
 
@@ -65,18 +73,45 @@ class DataService:
   def get_purchase_orders_created_between(self, start_date, end_date):
     """Retrieve all purchase orders between the start and end date"""
     options = {
-        "createdOnOrAfter":convert_date_to_api_format(start_date, self.timezone),
-        "createdBefore":convert_date_to_api_format(end_date, self.timezone)
+        "createdOnOrAfter":_convert_date_to_api_format(start_date, self.timezone),
+        "createdBefore":_convert_date_to_api_format(end_date, self.timezone)
       }
     return Endpoint("inventory", "purchase-orders").get_all(options)
-    pass
 
   def get_jobs_modified_between(self, start_date, end_date):
     """Retrieve all jobs modified between the start and end date"""
     options = {
-      "modifiedOnOrAfter":convert_date_to_api_format(start_date, self.timezone),
-      "modifiedBefore":convert_date_to_api_format(end_date, self.timezone)
+      "modifiedOnOrAfter":_convert_date_to_api_format(start_date, self.timezone),
+      "modifiedBefore":_convert_date_to_api_format(end_date, self.timezone)
     }
     data = Endpoint("jpm", "jobs").get_all(options)
     
     return data
+
+  def get_employees(self, active="True"):
+    """Retrieve active employee list"""
+    options = {
+        "active": active
+      }
+    return Endpoint("settings", "employees").get_all(options)
+
+  def get_technicians(self, active="True"):
+    """Retrieve active technician list"""
+    options = {
+        "active": active
+      }
+    return Endpoint("settings", "technicians").get_all(options)
+
+  def get_tag_types(self, active="True"):
+    """Retrieve active tag-types list"""
+    options = {
+        "active": active
+      }
+    return Endpoint("settings", "tag-types").get_all(options)
+
+  def get_business_units(self, active="True"):
+    """Retrieve active business units list"""
+    options = {
+        "active": active
+      }
+    return Endpoint("settings", "business-units").get_all(options)
