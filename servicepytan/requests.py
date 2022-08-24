@@ -66,3 +66,26 @@ class Endpoint:
     """Method that corresponds to a DEL request for deleting objects with subitems"""
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}/{modifier_id}", config_file=self.config_file)
     return request_json(url, options={}, payload="", config_file=self.config_file, request_type="DEL")
+
+  def export_one(self, export_endpoint, export_from=""):
+    """Export Doc String"""
+    url = endpoint_url(self.folder, "export", id="", modifier=f"{export_endpoint}", config_file=self.config_file)
+    return request_json(url, options={"from": export_from}, payload="", config_file=self.config_file, request_type="GET")
+
+  def export_all(self, export_endpoint, export_from=""):
+    """Export All Doc String"""
+    counter = 1
+    print(f"{export_endpoint} {counter}: {export_from}")
+    response = self.export_one(export_endpoint, export_from)
+    data = response["data"]
+    if data == []: return []
+    has_more = response["hasMore"]
+    while has_more:
+      counter += 1
+      export_from = response["continueFrom"]
+      print(f"{export_endpoint} {counter}: {export_from}")
+      response = self.export_one(export_endpoint, export_from)
+      data.extend(response["data"])
+      has_more = response["hasMore"]
+    print(f"Export Data Complete. {len(data)} rows exported.")
+    return data
