@@ -10,6 +10,7 @@ make html
 ```bash
 cd docs
 sphinx-apidoc -o source ../servicepytan
+```
 
 ## Documenting Python Packages in Sphinx Tutorial 
 https://brendanhasz.github.io/2019/01/05/sphinx.html#autodoc-extension
@@ -25,3 +26,16 @@ https://google.github.io/styleguide/pyguide.html
 
 ## AutoDoc Reference
 https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#module-sphinx.ext.napoleon
+
+# Publishing to PyPi
+https://realpython.com/pypi-publish-python-package/
+```bash
+# Building the Package Files
+python setup.py sdist bdist_wheel
+
+# Testing the Build
+twine upload -r testpypi dist/*
+
+# Live Publishing
+twine upload dist/*
+```
