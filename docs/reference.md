@@ -32,6 +32,7 @@ https://realpython.com/pypi-publish-python-package/
 ```bash
 # Building the Package Files
 python setup.py sdist bdist_wheel
+# If error: may need pip install wheel
 
 # Testing the Build
 twine upload -r testpypi dist/*
