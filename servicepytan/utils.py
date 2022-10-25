@@ -5,7 +5,7 @@ import inspect
 from servicepytan import URL_ROOT, AUTH_ROOT
 from servicepytan.auth import get_auth_headers, get_tenant_id
 
-def request_json(url, options={}, payload="", config_file='servicepytan_config.json', request_type="GET"):
+def request_json(url, options={}, payload="", config_file='servicepytan_config.json', request_type="GET", json_payload=""):
   """Makes the request to the API and returns JSON
 
   Retrives JSON response from provided URL with a number of parameters to customize the request.
@@ -24,7 +24,7 @@ def request_json(url, options={}, payload="", config_file='servicepytan_config.j
       TBD
   """
   headers = get_auth_headers(config_file)
-  response = requests.request(request_type, url, data=payload, headers=headers, params=options)
+  response = requests.request(request_type, url, data=payload, headers=headers, params=options, json=json_payload)
   return json.loads(response.text)
 
 def check_default_options(options):

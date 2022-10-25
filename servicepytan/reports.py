@@ -1,4 +1,4 @@
-from servicepytan.utils import request_json, check_default_options, endpoint_url
+from servicepytan.utils import request_json, get_timezone_by_file, endpoint_url
 
 class Report:
   """Primary class for retrieving Reporting Endpoint Data.
@@ -16,4 +16,4 @@ class Report:
   def get_data(self, params):
     """get report data"""
     url = endpoint_url("reporting",f"report-category/{self.category}/reports/{self.report_id}/data")
-    return request_json(url, params=params, config_file=self.config_file, request_type="POST")
+    return request_json(url, json_payload=params, config_file=self.config_file, request_type="POST")
