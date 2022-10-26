@@ -15,5 +15,5 @@ class Report:
 
   def get_data(self, params):
     """get report data"""
-    url = endpoint_url("reporting",f"report-category/{self.category}/reports/{self.report_id}/data")
+    url = endpoint_url("reporting",f"report-category/{self.category}/reports/{self.report_id}/data", config_file=self.config_file)
     return request_json(url, json_payload=params, config_file=self.config_file, request_type="POST")
