@@ -27,18 +27,32 @@ class Report:
     page = 1
     data = []
     fields = []
+    print("Getting first page of data...")
     response = self.get_data(params, page=page, page_size=page_size)
     data.extend(response["data"])
     fields.extend(response["fields"])
     total = response["totalCount"]
+    print(f"Retrieved {len(data)} of {total} records...")
     requests_needed = math.ceil(total / page_size)
     mins_to_complete = requests_needed * 5
-    if mins_to_complete > 60:
-      print(f"This request will take at least {mins_to_complete/60} hours to complete.")
-      print("Limit the parameters to reduce the number of requests and try again.")
-      return {"error": "Too many requests. Try again with fewer parameters."}
+    updated_page_size = page_size
+    if mins_to_complete > 60 or requests_needed > 2:
+      init_page_size = updated_page_size
+      if page_size < 5000 and math.ceil(total / 5000) < 12:
+        print("Setting page size to 5000 to speed up report retrieval...")
+        updated_page_size = 5000
+        requests_needed = 1 + math.ceil((total - init_page_size) / updated_page_size)
+      else:
+        print(f"This request will take at least {mins_to_complete/60} hours to complete.")
+        print("Limit the parameters to reduce the number of requests and try again.")
+        return {"error": "Too many requests. Try again with fewer parameters."}
     while len(data) < total:
       page += 1
-      response = self.get_data(params, page=page, page_size=page_size)
+      print(f"Getting page {page} of {requests_needed}...")
+      response = self.get_data(params, page=page, page_size=updated_page_size)
+      if(len(response["data"]) == 0):
+        print("No more data to retrieve.")
+        break
       data.extend(response["data"])
+      print(f"Retrieved {len(data)} of {total} records...")
     return {"data": data, "fields": fields}
