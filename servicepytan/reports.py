@@ -13,6 +13,8 @@ class Report:
   """Primary class for retrieving Reporting Endpoint Data.
 
   Attributes:
+      category: A string representing the report category. Find list of categories with get_report_categories().
+      report_id: A string representing the report id. Find list of report_id using get_report_list().
       config_file: a string file path to the config file.
   """
   def __init__(self, category, report_id, config_file="servicepytan_config.json"):
@@ -56,9 +58,12 @@ class Report:
     """show parameter types"""
     for param in self.metadata["parameters"]:
       dynamic_set_id = ""
+      required = "[ ]"
+      if param["isRequired"]:
+        required = "[*]"
       if param['acceptValues']:
         dynamic_set_id = f" (dynamicSetId: {param['acceptValues']['dynamicSetId']})"
-      print(f"{param['name']}: {param['dataType']}, {dynamic_set_id}")
+      print(f"{required} - {param['name']}: {param['dataType']}, {dynamic_set_id}")
 
   def get_data(self, params="", page=1, page_size=5000):
     """get report data"""
