@@ -9,6 +9,10 @@ def get_report_list(report_category, config_file="servicepytan_config.json"):
     """Get a list of reports for a given report category"""
     return request_json(endpoint_url('reporting', f'report-category/{report_category}/reports', config_file=config_file), config_file=config_file)
 
+def get_dynamic_set_list(dynamic_set_id,config_file="servicepytan_config.json"):
+    """Get a list of dynamic sets"""
+    return request_json(endpoint_url('reporting', f'dynamic-value-sets/{dynamic_set_id}', config_file=config_file), config_file=config_file)
+
 class Report:
   """Primary class for retrieving Reporting Endpoint Data.
 
