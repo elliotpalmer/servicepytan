@@ -43,7 +43,7 @@ data = st_data_service.get_jobs_completed_between("2022-04-06", "2022-04-07")
 print(f"Number of Jobs Returned {len(data)}")
 ```
 
-### Custom Reports
+## Custom Reports
 ```python
 # Import the functions and reporting class
 from servicepytan import Report
