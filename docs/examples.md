@@ -77,7 +77,19 @@ custom_report.show_param_types()
 # [ ] - BusinessUnitId: Number,  (dynamicSetId: business-units)
 # [ ] - IncludeAdjustmentInvoices: Boolean, 
 
-# Add Report
+# Get dynamic set information if needed
+dynamic_sets = get_dynamic_set_list(dynamic_set_id='job-date-filter-type',config_file_path)
+print(dynamic_sets)
+# [0, 'Invoice Date'],
+# [1, 'Job Completion Date'],
+# [2, 'Job Creation Date'],
+# [3, 'Job Start Date'],
+# [4, 'Last Paid On Date'],
+# [5, 'First Dispatch'],
+# [6, 'Jobs with Appt Date'],
+# [7, 'Jobs with Next Appt Start Date']
+
+# Add Report Parameters
 custom_report.add_params("DateType","3")
 custom_report.add_params("From", "2022-11-03")
 custom_report.add_params("To", "2022-11-03")
