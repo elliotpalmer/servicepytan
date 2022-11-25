@@ -10,12 +10,12 @@ class DataService:
   based on retrieving data between a date range.
 
   Attributes:
-      config_file: a string file path to the config file.
+      conn: a dictionary containing the credential config.
   """
-  def __init__(self, config_file="servicepytan_config.json"):
+  def __init__(self, conn=None):
     """Inits DataService with configuration file and authentication settings."""
-    self.config_file = config_file
-    self.timezone = get_timezone_by_file(config_file)
+    self.conn = conn
+    self.timezone = get_timezone_by_file(conn)
 
   def get_jobs_completed_between(self, start_date, end_date, job_status=["Completed","Scheduled","InProgress","Dispatched"]):
     """Retrieve all jobs completed between the start and end date"""

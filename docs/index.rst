@@ -41,22 +41,27 @@ Create Configuration File
 Create your :code:`servicepytan_config.json` file in the root directory::
    
    {
-      "CLIENT_ID": "cid.hhmdjd1jk9nqwertyr5cl6t5u5r5",
-      "CLIENT_SECRET": "cs2.yjnblmqpfiuzjyqwerty5gc28a35qabzo1qsss2l3fll5st64tgrxjxz",
-      "APP_ID": "12abc346skeg",
-      "APP_KEY": "ak1.qey12fgjhnch03lsm",
-      "TENANT_ID": "1234567890",
-      "TIMEZONE": ""
+      "SERVICETITAN_CLIENT_ID": "cid.hhmdjd1jk9nqwertyr5cl6t5u5r5",
+      "SERVICETITAN_CLIENT_SECRET": "cs2.yjnblmqpfiuzjyqwerty5gc28a35qabzo1qsss2l3fll5st64tgrxjxz",
+      "SERVICETITAN_APP_ID": "12abc346skeg",
+      "SERVICETITAN_APP_KEY": "ak1.qey12fgjhnch03lsm",
+      "SERVICETITAN_TENANT_ID": "1234567890",
+      "SERVICETITAN_TIMEZONE": ""
    }
+
+Starting with >=0.3.0 there are addtioanl configuration options available. See :doc:`ServicePytan Configuration <./configuration>` for more information.
+1. Create a .env file in the root directory of your project. This file will be used to store your environment variables.
+2. By directly inputing the credentials into the :code:`servicepytan.auth.servicepytan_connect()` file, you are storing your credentials in plain text. This is not recommended.
+> :code:`servicepytan.auth.servicepytan_connect(app_id="", app_key="", client_id="", client_secret="", tenant_id="", timezone="")`
 
 > NOTE: Remember to exclude this file from version control. (e.g. add to your :code:`.gitignore` file)
 
-* :code:`CLIENT_ID` - Find in :code:`Settings > Integrations > API Application Access > [App Name] > Edit`
-* :code:`CLIENT_SECRET` - Generated one time with :code:`CLIENT ID`
-* :code:`APP_ID` - Found in developers portal app definition
-* :code:`APP_KEY` - Found in developers portal app definition
-* :code:`TENANT_ID` - Found in developers portal app definition and integration settings
-* :code:`TIMEZONE` - (Optional) - Timezone Abbreviation like :code:`America/New_York` as listed at https://timezonedb.com/time-zones
+* :code:`SERVICETITAN_CLIENT_ID` - Find in :code:`Settings > Integrations > API Application Access > [App Name] > Edit`
+* :code:`SERVICETITAN_CLIENT_SECRET` - Generated one time with :code:`CLIENT ID`
+* :code:`SERVICETITAN_APP_ID` - Found in developers portal app definition
+* :code:`SERVICETITAN_APP_KEY` - Found in developers portal app definition
+* :code:`SERVICETITAN_TENANT_ID` - Found in developers portal app definition and integration settings
+* :code:`SERVICETITAN_TIMEZONE` - (Optional) - Timezone Abbreviation like :code:`America/New_York` as listed at https://timezonedb.com/time-zones
 
 Making Your First Request
 -------------------------
@@ -67,7 +72,12 @@ Making Your First Request
 
       # API Endpoint: https://api.servicetitan.io/jpm/v2/tenant/{tenant}/jobs
       # Folder: jpm, Endpoint: jobs
-      st_jobs_endpoint = servicepytan.Endpoint("jpm", "jobs")
+
+      # Create Connection Object. Note: This is a change from previous versions.
+      st_conn = servicepytan.auth.servicepytan_connect(config_file="./servicepytan_config.json")
+      
+      # Create API Object
+      st_jobs_endpoint = servicepytan.Endpoint("jpm", "jobs", conn=st_conn)
 
       # Return the data for a specific job in ServiceTitan
       # https://go.servicetitan.com/#/Job/Index/138517400

@@ -1,17 +1,17 @@
 import math
 from servicepytan.utils import request_json, get_timezone_by_file, endpoint_url, request_json_with_retry
 
-def get_report_categories(config_file="servicepytan_config.json"):
+def get_report_categories(conn=None):
     """Get a list of report categories"""
-    return request_json(endpoint_url('reporting', 'report-categories', config_file=config_file), config_file=config_file)
+    return request_json(endpoint_url('reporting', 'report-categories', conn=conn), conn=conn)
 
-def get_report_list(report_category, config_file="servicepytan_config.json"):
+def get_report_list(report_category, conn=None):
     """Get a list of reports for a given report category"""
-    return request_json(endpoint_url('reporting', f'report-category/{report_category}/reports', config_file=config_file), config_file=config_file)
+    return request_json(endpoint_url('reporting', f'report-category/{report_category}/reports', conn=conn), conn=conn)
 
-def get_dynamic_set_list(dynamic_set_id,config_file="servicepytan_config.json"):
+def get_dynamic_set_list(dynamic_set_id,conn=None):
     """Get a list of dynamic sets"""
-    return request_json(endpoint_url('reporting', f'dynamic-value-sets/{dynamic_set_id}', config_file=config_file), config_file=config_file)
+    return request_json(endpoint_url('reporting', f'dynamic-value-sets/{dynamic_set_id}', conn=conn), conn=conn)
 
 class Report:
   """Primary class for retrieving Reporting Endpoint Data.
@@ -19,12 +19,12 @@ class Report:
   Attributes:
       category: A string representing the report category. Find list of categories with get_report_categories().
       report_id: A string representing the report id. Find list of report_id using get_report_list().
-      config_file: a string file path to the config file.
+      conn: a dictionary containing the credential config.
   """
-  def __init__(self, category, report_id, config_file="servicepytan_config.json"):
+  def __init__(self, category, report_id, conn=None):
     """Inits DataService with configuration file and authentication settings."""
-    self.config_file = config_file
-    self.timezone = get_timezone_by_file(config_file)
+    self.conn = conn
+    # self.timezone = get_timezone_by_file(conn)
     self.category = category
     self.report_id = report_id
     self.params = {"parameters": []}
@@ -55,8 +55,8 @@ class Report:
   def get_metadata(self):
     """get report metadata"""
     endpoint = f"report-category/{self.category}/reports/{self.report_id}"
-    url = endpoint_url("reporting",endpoint, config_file=self.config_file)
-    return request_json_with_retry(url, config_file=self.config_file)
+    url = endpoint_url("reporting",endpoint, conn=self.conn)
+    return request_json_with_retry(url, conn=self.conn)
 
   def show_param_types(self):
     """show parameter types"""
@@ -75,9 +75,9 @@ class Report:
       params = self.params
     options = {"page": page, "pageSize": page_size, "includeTotal": True}
     endpoint = f"report-category/{self.category}/reports/{self.report_id}/data"
-    url = endpoint_url("reporting",endpoint, config_file=self.config_file)
+    url = endpoint_url("reporting",endpoint, conn=self.conn)
     return request_json_with_retry(url, options=options, json_payload=params, 
-              config_file=self.config_file, request_type="POST")
+              conn=self.conn, request_type="POST")
   
   def get_all_data(self, params="", page_size=5000):
     """get all report data"""
