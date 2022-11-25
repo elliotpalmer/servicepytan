@@ -15,7 +15,7 @@ on developer site.
 
 __author__ = """Elliot Palmer"""
 __email__ = 'elliot@ecoplumbers.com'
-__version__ = '0.1.0'
+__version__ = '0.3.0'
 
 # MODULES
 import requests

@@ -10,25 +10,25 @@ class Endpoint:
   Attributes:
       folder: A string indicating the group of endpoints you want to address.
       endpoint: A string indicating the endpoint you want to address.
-      config_file: a string file path to the config file.
+      conn: a dictionary containing the credential config.
   """
-  def __init__(self, folder, endpoint, config_file='servicepytan_config.json'):
+  def __init__(self, folder, endpoint, conn=None):
     """Inits Endpoint with folder, endpoint and allows for getting necessary credentials from the config file."""
     self.folder = folder
     self.endpoint = endpoint
-    self.config_file = config_file
+    self.conn = conn
 
   # Main Request Types
   def get_one(self, id, modifier=""):
     """Retrieve one record using the record id. Modifier is used for further endpoints."""
-    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, config_file=self.config_file)
-    return request_json(url, options={}, payload="", config_file=self.config_file, request_type="GET")
+    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, conn=self.conn)
+    return request_json(url, options={}, payload="", conn=self.conn, request_type="GET")
 
   def get_many(self, query={}):
     """Retrieve one page of results with query options to customize."""
-    url = endpoint_url(self.folder, self.endpoint, config_file=self.config_file)
+    url = endpoint_url(self.folder, self.endpoint, conn=self.conn)
     options = check_default_options(query)
-    return request_json(url, options, payload="", config_file=self.config_file, request_type="GET")
+    return request_json(url, options, payload="", conn=self.conn, request_type="GET")
   
   def get_all(self, query={}):
     """Retrive all pages in your query."""
@@ -49,28 +49,28 @@ class Endpoint:
 
   def create(self, payload):
     """Method that corresponds to a POST request for creating objects"""
-    url = endpoint_url(self.folder, self.endpoint, config_file=self.config_file)
-    return request_json(url, options={}, payload=payload, config_file=self.config_file, request_type="POST")
+    url = endpoint_url(self.folder, self.endpoint, conn=self.conn)
+    return request_json(url, options={}, payload=payload, conn=self.conn, request_type="POST")
 
   def update(self, id, payload, modifier="", request_type="PUT"):
     """Method that corresponds to PUT or POST request for updating objects. Defaults to PUT"""
-    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, config_file=self.config_file)
-    return request_json(url, options={}, payload=payload, config_file=self.config_file, request_type=request_type)
+    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, conn=self.conn)
+    return request_json(url, options={}, payload=payload, conn=self.conn, request_type=request_type)
 
   def delete(self, id, modifier=""):
     """Method that corresponds to a DEL request for deleting objects"""
-    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}", config_file=self.config_file)
-    return request_json(url, options={}, payload="", config_file=self.config_file, request_type="DEL")
+    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}", conn=self.conn)
+    return request_json(url, options={}, payload="", conn=self.conn, request_type="DEL")
 
   def delete_subitem(self, id, modifier_id, modifier):
     """Method that corresponds to a DEL request for deleting objects with subitems"""
-    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}/{modifier_id}", config_file=self.config_file)
-    return request_json(url, options={}, payload="", config_file=self.config_file, request_type="DEL")
+    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}/{modifier_id}", conn=self.conn)
+    return request_json(url, options={}, payload="", conn=self.conn, request_type="DEL")
 
   def export_one(self, export_endpoint, export_from=""):
     """Export Doc String"""
-    url = endpoint_url(self.folder, "export", id="", modifier=f"{export_endpoint}", config_file=self.config_file)
-    return request_json(url, options={"from": export_from}, payload="", config_file=self.config_file, request_type="GET")
+    url = endpoint_url(self.folder, "export", id="", modifier=f"{export_endpoint}", conn=self.conn)
+    return request_json(url, options={"from": export_from}, payload="", conn=self.conn, request_type="GET")
 
   def export_all(self, export_endpoint, export_from=""):
     """Export All Doc String"""

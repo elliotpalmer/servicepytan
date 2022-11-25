@@ -10,7 +10,8 @@ import servicepytan
 # Create the Jobs Endpoint Object
 # API Endpoint: https://api.servicetitan.io/jpm/v2/tenant/{tenant}/jobs
 # Folder: jpm, Endpoint: jobs
-st_jobs_endpoint = servicepytan.Endpoint("jpm", "jobs")
+st_conn = servicepytan.auth.servicepytan_connect(config_file="./servicepytan_config.json")
+st_jobs_endpoint = servicepytan.Endpoint("jpm", "jobs", conn=st_conn)
 
 options = {
   "pageSize":"50", # Number of jobs to return per API Request
@@ -35,8 +36,8 @@ print(f"Number of Jobs Returned: {len(jobs_data)}")
 
 ```python
 import servicepytan
-
-st_data_service = servicepytan.DataService()
+st_conn = servicepytan.auth.servicepytan_connect(config_file="./servicepytan_config.json")
+st_data_service = servicepytan.DataService(conn=st_conn)
 
 data = st_data_service.get_jobs_completed_between("2022-04-06", "2022-04-07")
 
@@ -46,23 +47,23 @@ print(f"Number of Jobs Returned {len(data)}")
 ## Custom Reports
 ```python
 # Import the functions and reporting class
-from servicepytan import Report
+from servicepytan import Report, auth
 from servicepytan.reports import get_report_categories, get_report_list
 
 # Set your config file path
-config_file_path = "./path/to/servicepytan_config.json"
+st_conn = servicepytan.auth.servicepytan_connect(config_file="./servicepytan_config.json")
 
 # Retrieve a list of report categories
-categories = get_report_categories(config_file_path)
+categories = get_report_categories(config_file_path, conn=st_conn)
 print(categories)
 
 # Retrieve a list of reports included in the category 
-category_report_list = get_report_list("operations", config_file_path)
+category_report_list = get_report_list("operations", config_file_path, conn=st_conn)
 print(category_report_list)
 
 # Configure a specific report
 # NOTE: this is a standard ServiceTitan report in the Operations category
-custom_report = Report("operations", "94428310", config_file=config_file_path)
+custom_report = Report("operations", "94428310", conn=st_conn)
 
 # Look at the reporting metadata
 # This inclued the filter options and field information
@@ -78,7 +79,7 @@ custom_report.show_param_types()
 # [ ] - IncludeAdjustmentInvoices: Boolean, 
 
 # Get dynamic set information if needed
-dynamic_sets = get_dynamic_set_list(dynamic_set_id='job-date-filter-type',config_file_path)
+dynamic_sets = get_dynamic_set_list(dynamic_set_id='job-date-filter-type',conn=st_conn)
 print(dynamic_sets)
 # [0, 'Invoice Date'],
 # [1, 'Job Completion Date'],
