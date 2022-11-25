@@ -26,7 +26,8 @@ Python Library to make it easier to interact with the ServiceTitan API v2
 Features
 --------
 
-* TODO
+* Simple Syntax for getting data from standard RESTful endpoints from ServiceTitan
+* Ability to extract custom report data and automatically make calls for additional data
 
 Credits
 -------
