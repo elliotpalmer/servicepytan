@@ -63,11 +63,16 @@ class Report:
     for param in self.metadata["parameters"]:
       dynamic_set_id = ""
       required = "[ ]"
+      accepted_values = []
       if param["isRequired"]:
         required = "[*]"
       if param['acceptValues']:
         dynamic_set_id = f" (dynamicSetId: {param['acceptValues']['dynamicSetId']})"
+        if param['acceptValues']['values']:
+          accepted_values = param['acceptValues']['values']
       print(f"{required} - {param['name']}: {param['dataType']}, {dynamic_set_id}")
+      for value in accepted_values:
+        print(f"  - {value}")
 
   def get_data(self, params="", page=1, page_size=5000):
     """get report data"""
