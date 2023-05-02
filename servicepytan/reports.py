@@ -79,7 +79,7 @@ class Report:
     return request_json_with_retry(url, options=options, json_payload=params, 
               conn=self.conn, request_type="POST")
   
-  def get_all_data(self, params="", page_size=5000):
+  def get_all_data(self, params="", page_size=5000, timeout_min=60):
     """get all report data"""
     page = 1
     data = []
@@ -96,7 +96,7 @@ class Report:
     requests_needed = math.ceil(total / page_size)
     mins_to_complete = requests_needed * 5
     updated_page_size = page_size
-    if mins_to_complete > 60 or requests_needed > 2:
+    if mins_to_complete > timeout_min:
       init_page_size = updated_page_size
       if page_size < 5000 and math.ceil(total / 5000) < 12:
         print("Setting page size to 5000 to speed up report retrieval...")
