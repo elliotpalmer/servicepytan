@@ -19,10 +19,11 @@ class Endpoint:
     self.conn = conn
 
   # Main Request Types
-  def get_one(self, id, modifier=""):
+  def get_one(self, id, modifier="", query={}):
     """Retrieve one record using the record id. Modifier is used for further endpoints."""
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, conn=self.conn)
-    return request_json(url, options={}, payload="", conn=self.conn, request_type="GET")
+    options = check_default_options(query)
+    return request_json(url, options=options, payload="", conn=self.conn, request_type="GET")
 
   def get_many(self, query={}):
     """Retrieve one page of results with query options to customize."""
@@ -67,16 +68,16 @@ class Endpoint:
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}/{modifier_id}", conn=self.conn)
     return request_json(url, options={}, payload="", conn=self.conn, request_type="DEL")
 
-  def export_one(self, export_endpoint, export_from=""):
+  def export_one(self, export_endpoint, export_from="", include_recent_changes=False):
     """Export Doc String"""
     url = endpoint_url(self.folder, "export", id="", modifier=f"{export_endpoint}", conn=self.conn)
-    return request_json(url, options={"from": export_from}, payload="", conn=self.conn, request_type="GET")
+    return request_json(url, options={"from": export_from, "includeRecentChanges": include_recent_changes}, payload="", conn=self.conn, request_type="GET")
 
-  def export_all(self, export_endpoint, export_from=""):
+  def export_all(self, export_endpoint, export_from="", include_recent_changes=False):
     """Export All Doc String"""
     counter = 1
     print(f"{export_endpoint} {counter}: {export_from}")
-    response = self.export_one(export_endpoint, export_from)
+    response = self.export_one(export_endpoint, export_from, include_recent_changes)
     data = response["data"]
     if data == []: return []
     has_more = response["hasMore"]
@@ -84,7 +85,7 @@ class Endpoint:
       counter += 1
       export_from = response["continueFrom"]
       print(f"{export_endpoint} {counter}: {export_from}")
-      response = self.export_one(export_endpoint, export_from)
+      response = self.export_one(export_endpoint, export_from, include_recent_changes)
       data.extend(response["data"])
       has_more = response["hasMore"]
     print(f"Export Data Complete. {len(data)} rows exported.")
