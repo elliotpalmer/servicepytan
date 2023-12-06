@@ -51,7 +51,7 @@ class Endpoint:
   def create(self, payload):
     """Method that corresponds to a POST request for creating objects"""
     url = endpoint_url(self.folder, self.endpoint, conn=self.conn)
-    return request_json(url, options={}, payload=payload, conn=self.conn, request_type="POST")
+    return request_json(url, options={}, json_payload=payload, conn=self.conn, request_type="POST")
 
   def update(self, id, payload, modifier="", request_type="PUT"):
     """Method that corresponds to PUT or POST request for updating objects. Defaults to PUT"""
