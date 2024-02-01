@@ -40,7 +40,8 @@ def servicepytan_connect(
         f.close()
 
     # If not, check if the environment variables are set
-    elif not app_key or not tenant_id or not client_id or not client_secret or not app_id:
+    # AFAICT, app_id is never used in the rest of the code, so it isn't necessary
+    elif not app_key or not tenant_id or not client_id or not client_secret:
         load_dotenv()
         print("Auth config not provided, loading from environment variables...")
         for var in AUTH_VARIABLES:
