@@ -4,8 +4,24 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
+from enum import StrEnum
 
-from servicepytan import URL_ROOT, AUTH_ROOT
+class ApiEnvironment(StrEnum):
+    PRODUCTION  = "production",
+    INTEGRATION = "integration"
+
+def get_auth_root_url(env: str) -> str:
+    if env == ApiEnvironment.PRODUCTION:
+        return "https://auth.servicetitan.io"
+    else:
+        return "https://auth-integration.servicetitan.io"
+
+def get_api_root_url(env: str) -> str:
+    if env == ApiEnvironment.PRODUCTION:
+        return "https://api.servicetitan.io"
+    else:
+        return "https://api-integration.servicetitan.io"
+
 
 AUTH_VARIABLES = [
     'SERVICETITAN_APP_KEY',
@@ -13,10 +29,13 @@ AUTH_VARIABLES = [
     'SERVICETITAN_CLIENT_ID',
     'SERVICETITAN_CLIENT_SECRET',
     'SERVICETITAN_APP_ID',
-    'SERVICETITAN_TIMEZONE'
+    'SERVICETITAN_TIMEZONE',
+
+    'SERVICETITAN_API_ENVIRONMENT'  # Optional. One of values of the ApiEnvironemnt enum.
 ]
 
 def servicepytan_connect(
+    api_environment: str,
     app_key:str=None, tenant_id:str=None, client_id:str=None, 
     client_secret:str=None, app_id:str=None, timezone:str="UTC", config_file:str=None):
     
@@ -26,7 +45,12 @@ def servicepytan_connect(
             "SERVICETITAN_CLIENT_ID": client_id,
             "SERVICETITAN_CLIENT_SECRET": client_secret,
             "SERVICETITAN_APP_ID": app_id,
-            "SERVICETITAN_TIMEZONE": timezone
+            "SERVICETITAN_TIMEZONE": timezone,
+
+            'SERVICETITAN_API_ENVIRONMENT': api_environment,
+
+            "auth_root": get_auth_root_url(api_environment),
+            "api_root": get_api_root_url(api_environment),
     }
 
 
@@ -41,7 +65,7 @@ def servicepytan_connect(
 
     # If not, check if the environment variables are set
     # AFAICT, app_id is never used in the rest of the code, so it isn't necessary
-    elif not app_key or not tenant_id or not client_id or not client_secret:
+    elif not api_environment or not app_key or not tenant_id or not client_id or not client_secret:
         load_dotenv()
         print("Auth config not provided, loading from environment variables...")
         for var in AUTH_VARIABLES:
@@ -54,7 +78,7 @@ def servicepytan_connect(
 
     return auth_config_object
 
-def request_auth_token(client_id, client_secret):
+def request_auth_token(auth_root_url: str, client_id, client_secret):
   """Fetches Auth Token.
 
   Retrieves authentication token for completing a request against the API
@@ -70,7 +94,7 @@ def request_auth_token(client_id, client_secret):
       TBD
   """
 
-  url = f"{AUTH_ROOT}/connect/token"
+  url = f"{auth_root_url}/connect/token"
 
   querystring = {"Content-Type":"application/x-www-form-urlencoded"}
 
@@ -98,7 +122,7 @@ def get_auth_token(conn):
   # Read File
   client_id = conn['SERVICETITAN_CLIENT_ID']
   client_secret = conn['SERVICETITAN_CLIENT_SECRET']
-  return request_auth_token(client_id, client_secret)["access_token"]
+  return request_auth_token(conn["auth_root"], client_id, client_secret)["access_token"]
 
 def get_app_key(conn):
   """Fetches App Key from the config_file.

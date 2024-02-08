@@ -21,10 +21,6 @@ __version__ = '0.3.2'
 import requests
 import json
 
-# GLOBALS
-AUTH_ROOT = "https://auth.servicetitan.io"
-URL_ROOT = "https://api.servicetitan.io"
-
 from servicepytan.requests import Endpoint
 from servicepytan.reports import Report
 from servicepytan.data import DataService

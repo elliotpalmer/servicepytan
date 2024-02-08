@@ -2,7 +2,6 @@
 import requests
 import json
 import time
-from servicepytan import URL_ROOT, AUTH_ROOT
 from servicepytan.auth import get_auth_headers, get_tenant_id
 
 def request_json(url, options={}, payload="", conn=None, request_type="GET", json_payload=""):
@@ -58,7 +57,7 @@ def endpoint_url(folder, endpoint, id="", modifier="", conn=None, tenant_id=""):
   if tenant_id == "":
     tenant_id = get_tenant_id(conn)
 
-  url = f"{URL_ROOT}/{folder}/v2/tenant/{tenant_id}/{endpoint}"
+  url = f"{conn['api_root']}/{folder}/v2/tenant/{tenant_id}/{endpoint}"
   if id != "": url = f"{url}/{id}"
   if modifier != "": url = f"{url}/{modifier}"
   return url
