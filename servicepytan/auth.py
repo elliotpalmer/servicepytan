@@ -105,7 +105,6 @@ def request_auth_token(auth_root_url: str, client_id, client_secret):
     "client_secret": client_secret,
   }
 
-  print(f"Requesting auth token from {url} with headers {headers} and data {data}")
   response = requests.post(url, headers=headers, data=data)
   if response.status_code != requests.codes.ok:
     print(f"Error fetching auth token (url={url}, header={headers}, data={data}): {response.text}")
