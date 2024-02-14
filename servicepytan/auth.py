@@ -103,7 +103,7 @@ def request_auth_token(auth_root_url: str, client_id, client_secret):
 
   response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
   if response.status_code != requests.codes.ok:
-    print(f"Error fetching auth token: {response.text}")
+    print(f"Error fetching auth token (url={url}, payload={payload}, headers={headers}, querystring={querystring}): {response.text}")
     response.raise_for_status()
 
   return json.loads(response.text)
