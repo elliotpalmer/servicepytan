@@ -24,6 +24,10 @@ def request_json(url, options={}, payload="", conn=None, request_type="GET", jso
   """
   headers = get_auth_headers(conn)
   response = requests.request(request_type, url, data=payload, headers=headers, params=options, json=json_payload)
+  if response.status_code != requests.codes.ok:
+    print(f"Error fetching data at {url}: {response.text}")
+    response.raise_for_status()
+
   return json.loads(response.text)
 
 def check_default_options(options):
