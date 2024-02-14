@@ -94,19 +94,23 @@ def request_auth_token(auth_root_url: str, client_id, client_secret):
       TBD
   """
 
-  url = f"{auth_root_url}/connect/token"
+  url: str = f"{auth_root_url}/connect/token"
 
-  querystring = {"Content-Type":"application/x-www-form-urlencoded"}
+  headers: dict = {
+    "Content-Type": "application/x-www-form-urlencoded",
+  }
+  data: dict = {
+    "grant_type": "client_credentials",
+    "client_id": client_id,
+    "client_secret": {client_secret}
+  }
 
-  payload = f"grant_type=client_credentials&client_id={client_id}&client_secret={client_secret}"
-  headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
-  response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
+  response = requests.post(url, headers=headers, data=data)
   if response.status_code != requests.codes.ok:
-    print(f"Error fetching auth token (url={url}, payload={payload}, headers={headers}, querystring={querystring}): {response.text}")
+    print(f"Error fetching auth token (url={url}, header={headers}, data={data}): {response.text}")
     response.raise_for_status()
 
-  return json.loads(response.text)
+  return response.json()
 
 def get_auth_token(conn):
   """Fetches Auth Token using the config_file.

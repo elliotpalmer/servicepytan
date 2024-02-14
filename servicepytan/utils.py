@@ -1,10 +1,9 @@
 """Utility Functions for Supporting Other Modules"""
 import requests
-import json
 import time
 from servicepytan.auth import get_auth_headers, get_tenant_id
 
-def request_json(url, options={}, payload="", conn=None, request_type="GET", json_payload=""):
+def request_json(url, options={}, payload={}, conn=None, request_type="GET", json_payload={}):
   """Makes the request to the API and returns JSON
 
   Retrieves JSON response from provided URL with a number of parameters to customize the request.
@@ -25,10 +24,10 @@ def request_json(url, options={}, payload="", conn=None, request_type="GET", jso
   headers = get_auth_headers(conn)
   response = requests.request(request_type, url, data=payload, headers=headers, params=options, json=json_payload)
   if response.status_code != requests.codes.ok:
-    print(f"Error fetching data (url={url}, data={payload}, headers={headers}, json={json_payload}): {response.text}")
+    print(f"Error fetching data (url={url}, heads={headers}, data={payload}, json={json_payload}): {response.text}")
     response.raise_for_status()
 
-  return json.loads(response.text)
+  return response.json()
 
 def check_default_options(options):
   """Add sensible defaults to options when not defined"""
