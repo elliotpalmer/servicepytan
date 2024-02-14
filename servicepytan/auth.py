@@ -40,17 +40,17 @@ def servicepytan_connect(
     client_secret:str=None, app_id:str=None, timezone:str="UTC", config_file:str=None):
     
     auth_config_object = {
-            "SERVICETITAN_APP_KEY": app_key,
-            "SERVICETITAN_TENANT_ID": tenant_id,
-            "SERVICETITAN_CLIENT_ID": client_id,
-            "SERVICETITAN_CLIENT_SECRET": client_secret,
-            "SERVICETITAN_APP_ID": app_id,
-            "SERVICETITAN_TIMEZONE": timezone,
+        "SERVICETITAN_APP_KEY": app_key,
+        "SERVICETITAN_TENANT_ID": tenant_id,
+        "SERVICETITAN_CLIENT_ID": client_id,
+        "SERVICETITAN_CLIENT_SECRET": client_secret,
+        "SERVICETITAN_APP_ID": app_id,
+        "SERVICETITAN_TIMEZONE": timezone,
 
-            'SERVICETITAN_API_ENVIRONMENT': api_environment,
+        'SERVICETITAN_API_ENVIRONMENT': api_environment,
 
-            "auth_root": get_auth_root_url(api_environment),
-            "api_root": get_api_root_url(api_environment),
+        "auth_root": get_auth_root_url(api_environment),
+        "api_root": get_api_root_url(api_environment),
     }
 
 
