@@ -6,21 +6,33 @@ import os
 from dotenv import load_dotenv
 from enum import StrEnum
 
+import logging
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+
+
 class ApiEnvironment(StrEnum):
     PRODUCTION  = "production",
     INTEGRATION = "integration"
 
 def get_auth_root_url(env: str) -> str:
-    if env == ApiEnvironment.PRODUCTION:
-        return "https://auth.servicetitan.io"
-    else:
-        return "https://auth-integration.servicetitan.io"
+    match env:
+        case ApiEnvironment.PRODUCTION:
+            return "https://auth.servicetitan.io"
+        case ApiEnvironment.INTEGRATION:
+            return "https://auth-integration.servicetitan.io"
+        case _:
+            raise ValueError(f"Unknown ApiEnvironment: {env}")
 
 def get_api_root_url(env: str) -> str:
-    if env == ApiEnvironment.PRODUCTION:
-        return "https://api.servicetitan.io"
-    else:
-        return "https://api-integration.servicetitan.io"
+    match env:
+        case ApiEnvironment.PRODUCTION:
+            return "https://api.servicetitan.io"
+        case ApiEnvironment.INTEGRATION:
+            return "https://api-integration.servicetitan.io"
+        case _:
+            raise ValueError(f"Unknown ApiEnvironment: {env}")
 
 
 AUTH_VARIABLES = [
@@ -31,7 +43,7 @@ AUTH_VARIABLES = [
     'SERVICETITAN_APP_ID',
     'SERVICETITAN_TIMEZONE',
 
-    'SERVICETITAN_API_ENVIRONMENT'  # Optional. One of values of the ApiEnvironemnt enum.
+    'SERVICETITAN_API_ENVIRONMENT'  # One of values of the ApiEnvironment enum
 ]
 
 def servicepytan_connect(
@@ -56,7 +68,7 @@ def servicepytan_connect(
 
     # First check if the config_file is provided
     if config_file:
-        print("Setting auth config from file...")
+        logger.info("Setting auth config from file...")
         f = open(config_file)
         creds = json.load(f)
         for var in AUTH_VARIABLES:
@@ -67,13 +79,13 @@ def servicepytan_connect(
     # AFAICT, app_id is never used in the rest of the code, so it isn't necessary
     elif not api_environment or not app_key or not tenant_id or not client_id or not client_secret:
         load_dotenv()
-        print("Auth config not provided, loading from environment variables...")
+        logger.info("Auth config not provided, loading from environment variables...")
         for var in AUTH_VARIABLES:
             auth_var = os.environ.get(var)
             if auth_var:
                 auth_config_object[var] = auth_var
             else:
-                print(f"Environment variable {var} not found or provided in function. Defualting to empty string.")
+                logger.info(f"Environment variable {var} not found or provided in function. Defaulting to empty string.")
                 auth_config_object[var] = ''
 
     return auth_config_object
@@ -107,7 +119,7 @@ def request_auth_token(auth_root_url: str, client_id, client_secret):
 
   response = requests.post(url, headers=headers, data=data)
   if response.status_code != requests.codes.ok:
-    print(f"Error fetching auth token (url={url}, header={headers}, data={data}): {response.text}")
+    logger.error(f"Error fetching auth token (url={url}, header={headers}, data={data}): {response.text}")
     response.raise_for_status()
 
   return response.json()

@@ -3,6 +3,11 @@ import requests
 import time
 from servicepytan.auth import get_auth_headers, get_tenant_id
 
+import logging
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+
 def request_json(url, options={}, payload={}, conn=None, request_type="GET", json_payload={}):
   """Makes the request to the API and returns JSON
 
@@ -24,7 +29,7 @@ def request_json(url, options={}, payload={}, conn=None, request_type="GET", jso
   headers = get_auth_headers(conn)
   response = requests.request(request_type, url, data=payload, headers=headers, params=options, json=json_payload)
   if response.status_code != requests.codes.ok:
-    print(f"Error fetching data (url={url}, heads={headers}, data={payload}, json={json_payload}): {response.text}")
+    logger.error(f"Error fetching data (url={url}, heads={headers}, data={payload}, json={json_payload}): {response.text}")
     response.raise_for_status()
 
   return response.json()
@@ -106,9 +111,9 @@ def get_timezone_by_file(conn=None):
 def sleep_with_countdown(sleep_time):
   """Sleeps for a given amount of time with a countdown"""
   for i in range(sleep_time, 0, -1):
-      print("Trying again in {} seconds...       ".format(i),end='\r')
+      logger.info("Trying again in {} seconds...       ".format(i),end='\r')
       time.sleep(1)
-  print("")
+  logger.info("")
   pass
 
 def request_json_with_retry(url, options={}, payload="", conn=None, request_type="GET", json_payload=""):
@@ -135,7 +140,7 @@ def request_json_with_retry(url, options={}, payload="", conn=None, request_type
   if "traceId" in response:
     if response['status'] == 429:
         sleep_time = response['title'].split(" ")[-2]
-        print("Rate Limit Exceeded. Retrying in {} seconds...".format(sleep_time))
+        logger.warning("Rate Limit Exceeded. Retrying in {} seconds...".format(sleep_time))
         sleep_with_countdown(int(sleep_time))
         response = request_json_with_retry(url, options=options, payload=payload, conn=conn, request_type=request_type, json_payload=json_payload)
   
