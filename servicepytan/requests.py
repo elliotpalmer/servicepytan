@@ -1,4 +1,10 @@
 from servicepytan.utils import request_json, check_default_options, endpoint_url
+
+import logging
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+
 class Endpoint:
   """Primary class for interacting with the API by establishing an endpoint object.
 
@@ -25,24 +31,30 @@ class Endpoint:
     options = check_default_options(query)
     return request_json(url, options=options, payload="", conn=self.conn, request_type="GET")
 
-  def get_many(self, query={}):
-    """Retrieve one page of results with query options to customize."""
-    url = endpoint_url(self.folder, self.endpoint, conn=self.conn)
+  def get_many(self, query={}, id="", modifier=""):
+    """
+    Retrieve one page of results with query options to customize.
+
+    Even though this is a "get_many" request, we can still use an id and modifier.
+    For example, this is how we get Notes for a specific Job.
+    The id would be the Job ID and the modifier would be "notes".
+    """
+    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, conn=self.conn)
     options = check_default_options(query)
     return request_json(url, options, payload="", conn=self.conn, request_type="GET")
   
-  def get_all(self, query={}):
+  def get_all(self, query={}, id="", modifier=""):
     """Retrive all pages in your query."""
     query["page"] = "1"
-    print(query)
-    response = self.get_many(query)
+    logger.info(query)
+    response = self.get_many(query=query, id=id, modifier=modifier)
     data = response["data"]
     if data == []: return []
     has_more = response["hasMore"]
     while has_more:
       query["page"] = str(int(query["page"]) + 1)
-      print(query)
-      response = self.get_many(query)
+      logger.info(query)
+      response = self.get_many(query=query, id=id, modifier=modifier)
       data.extend(response["data"])
       has_more = response["hasMore"]
 
@@ -76,7 +88,7 @@ class Endpoint:
   def export_all(self, export_endpoint, export_from="", include_recent_changes=False):
     """Export All Doc String"""
     counter = 1
-    print(f"{export_endpoint} {counter}: {export_from}")
+    logger.info(f"{export_endpoint} {counter}: {export_from}")
     response = self.export_one(export_endpoint, export_from, include_recent_changes)
     data = response["data"]
     if data == []: return []
@@ -84,9 +96,9 @@ class Endpoint:
     while has_more:
       counter += 1
       export_from = response["continueFrom"]
-      print(f"{export_endpoint} {counter}: {export_from}")
+      logger.info(f"{export_endpoint} {counter}: {export_from}")
       response = self.export_one(export_endpoint, export_from, include_recent_changes)
       data.extend(response["data"])
       has_more = response["hasMore"]
-    print(f"Export Data Complete. {len(data)} rows exported.")
+    logger.info(f"Export Data Complete. {len(data)} rows exported.")
     return data

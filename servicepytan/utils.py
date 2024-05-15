@@ -1,11 +1,14 @@
 """Utility Functions for Supporting Other Modules"""
 import requests
-import json
 import time
-from servicepytan import URL_ROOT, AUTH_ROOT
 from servicepytan.auth import get_auth_headers, get_tenant_id
 
-def request_json(url, options={}, payload="", conn=None, request_type="GET", json_payload=""):
+import logging
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+
+def request_json(url, options={}, payload={}, conn=None, request_type="GET", json_payload={}):
   """Makes the request to the API and returns JSON
 
   Retrieves JSON response from provided URL with a number of parameters to customize the request.
@@ -25,7 +28,11 @@ def request_json(url, options={}, payload="", conn=None, request_type="GET", jso
   """
   headers = get_auth_headers(conn)
   response = requests.request(request_type, url, data=payload, headers=headers, params=options, json=json_payload)
-  return json.loads(response.text)
+  if response.status_code != requests.codes.ok:
+    logger.error(f"Error fetching data (url={url}, heads={headers}, data={payload}, json={json_payload}): {response.text}")
+    response.raise_for_status()
+
+  return response.json()
 
 def check_default_options(options):
   """Add sensible defaults to options when not defined"""
@@ -58,7 +65,7 @@ def endpoint_url(folder, endpoint, id="", modifier="", conn=None, tenant_id=""):
   if tenant_id == "":
     tenant_id = get_tenant_id(conn)
 
-  url = f"{URL_ROOT}/{folder}/v2/tenant/{tenant_id}/{endpoint}"
+  url = f"{conn['api_root']}/{folder}/v2/tenant/{tenant_id}/{endpoint}"
   if id != "": url = f"{url}/{id}"
   if modifier != "": url = f"{url}/{modifier}"
   return url
@@ -104,9 +111,9 @@ def get_timezone_by_file(conn=None):
 def sleep_with_countdown(sleep_time):
   """Sleeps for a given amount of time with a countdown"""
   for i in range(sleep_time, 0, -1):
-      print("Trying again in {} seconds...       ".format(i),end='\r')
+      logger.info("Trying again in {} seconds...       ".format(i),end='\r')
       time.sleep(1)
-  print("")
+  logger.info("")
   pass
 
 def request_json_with_retry(url, options={}, payload="", conn=None, request_type="GET", json_payload=""):
@@ -133,7 +140,7 @@ def request_json_with_retry(url, options={}, payload="", conn=None, request_type
   if "traceId" in response:
     if response['status'] == 429:
         sleep_time = response['title'].split(" ")[-2]
-        print("Rate Limit Exceeded. Retrying in {} seconds...".format(sleep_time))
+        logger.warning("Rate Limit Exceeded. Retrying in {} seconds...".format(sleep_time))
         sleep_with_countdown(int(sleep_time))
         response = request_json_with_retry(url, options=options, payload=payload, conn=conn, request_type=request_type, json_payload=json_payload)
   

@@ -1,6 +1,11 @@
 import math
 from servicepytan.utils import request_json, get_timezone_by_file, endpoint_url, request_json_with_retry
 
+import logging
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+
 def get_report_categories(conn=None):
     """Get a list of report categories"""
     return request_json(endpoint_url('reporting', 'report-categories', conn=conn), conn=conn)
@@ -34,7 +39,7 @@ class Report:
     """add a parameter to the report"""
     param_keys = [param["name"] for param in self.params["parameters"]]
     if name in param_keys:
-      print(f"Parameter '{name}' already exists. Updating value from '{self.params['parameters'][param_keys.index(name)]['value']}' to '{value}'...")
+      logger.info(f"Parameter '{name}' already exists. Updating value from '{self.params['parameters'][param_keys.index(name)]['value']}' to '{value}'...")
       self.update_params(name, value)
     else:
       self.params["parameters"].append({"name": name, "value": value})
@@ -45,7 +50,7 @@ class Report:
     if name in param_keys:
       self.params["parameters"][param_keys.index(name)]["value"] = value
     else:
-      print(f"Parameter '{name}' does not exist. Adding parameter...")
+      logger.info(f"Parameter '{name}' does not exist. Adding parameter...")
       self.add_params(name, value)
 
   def get_params(self):
@@ -70,9 +75,9 @@ class Report:
         dynamic_set_id = f" (dynamicSetId: {param['acceptValues']['dynamicSetId']})"
         if param['acceptValues']['values']:
           accepted_values = param['acceptValues']['values']
-      print(f"{required} - {param['name']}: {param['dataType']}, {dynamic_set_id}")
+      logger.info(f"{required} - {param['name']}: {param['dataType']}, {dynamic_set_id}")
       for value in accepted_values:
-        print(f"  - {value}")
+        logger.info(f"  - {value}")
 
   def get_data(self, params="", page=1, page_size=5000):
     """get report data"""
@@ -91,34 +96,34 @@ class Report:
     fields = []
     if params == "":
       params = self.params
-    print("Getting first page of data...")
+    logger.info("Getting first page of data...")
     response = self.get_data(params, page=page, page_size=page_size)
     data.extend(response["data"])
     fields.extend(response["fields"])
     total = response["totalCount"]
     has_more = response["hasMore"]
-    print(f"Retrieved {len(data)} of {total} records...")
+    logger.info(f"Retrieved {len(data)} of {total} records...")
     requests_needed = math.ceil(total / page_size)
     mins_to_complete = requests_needed * 5
     updated_page_size = page_size
     if mins_to_complete > timeout_min:
       init_page_size = updated_page_size
       if page_size < 5000 and math.ceil(total / 5000) < 12:
-        print("Setting page size to 5000 to speed up report retrieval...")
+        logger.info("Setting page size to 5000 to speed up report retrieval...")
         updated_page_size = 5000
         requests_needed = 1 + math.ceil((total - init_page_size) / updated_page_size)
       else:
-        print(f"This request will take at least {mins_to_complete/60} hours to complete.")
-        print("Limit the parameters to reduce the number of requests and try again.")
+        logger.warning(f"This request will take at least {mins_to_complete/60} hours to complete.")
+        logger.warning("Limit the parameters to reduce the number of requests and try again.")
         return {"error": "Too many requests. Try again with fewer parameters."}
     while has_more:
       page += 1
-      print(f"Getting page {page} of {requests_needed}...")
+      logger.info(f"Getting page {page} of {requests_needed}...")
       response = self.get_data(params, page=page, page_size=updated_page_size)
       if(len(response["data"]) == 0):
-        print("No more data to retrieve.")
+        logger.info("No more data to retrieve.")
         break
       data.extend(response["data"])
-      print(f"Retrieved {len(data)} sof {total} records...")
+      logger.info(f"Retrieved {len(data)} sof {total} records...")
       has_more = response["hasMore"]
     return {"data": data, "fields": fields}
