@@ -108,6 +108,7 @@ Making Your First Request
    :caption: Table of Contents:
 
    prerequisites
+   configuration
    examples
    servicepytan
    reference
