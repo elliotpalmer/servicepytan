@@ -3,13 +3,20 @@
 import requests
 import json
 import os
+import time
+import threading
 from dotenv import load_dotenv
 from enum import StrEnum
+from typing import Dict, Optional
 
 import logging
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
+
+# Global token cache with thread safety
+_token_cache = {}
+_cache_lock = threading.Lock()
 
 
 class ApiEnvironment(StrEnum):
@@ -89,6 +96,37 @@ AUTH_VARIABLES = [
     'SERVICETITAN_API_ENVIRONMENT'  # One of values of the ApiEnvironment enum
 ]
 
+def _validate_credentials(auth_config: Dict) -> None:
+    """Validate that required credentials are present and not empty.
+    
+    Args:
+        auth_config: Dictionary containing authentication configuration
+        
+    Raises:
+        ValueError: If required credentials are missing or empty
+    """
+    required_fields = [
+        'SERVICETITAN_APP_KEY',
+        'SERVICETITAN_TENANT_ID', 
+        'SERVICETITAN_CLIENT_ID',
+        'SERVICETITAN_CLIENT_SECRET'
+    ]
+    
+    missing_fields = []
+    empty_fields = []
+    
+    for field in required_fields:
+        if field not in auth_config:
+            missing_fields.append(field)
+        elif not auth_config[field] or auth_config[field].strip() == '':
+            empty_fields.append(field)
+    
+    if missing_fields:
+        raise ValueError(f"Missing required credentials: {', '.join(missing_fields)}")
+    
+    if empty_fields:
+        raise ValueError(f"Empty credentials (please provide values): {', '.join(empty_fields)}")
+
 def servicepytan_connect(
     api_environment: str=ApiEnvironment.production,
     app_key:str=None, tenant_id:str=None, client_id:str=None, 
@@ -111,6 +149,9 @@ def servicepytan_connect(
         
     Returns:
         dict: Configuration object containing all necessary authentication settings
+        
+    Raises:
+        ValueError: If required credentials are missing or invalid
         
     Examples:
         >>> # Using parameters
@@ -146,11 +187,15 @@ def servicepytan_connect(
     # First check if the config_file is provided
     if config_file:
         logger.info("Setting auth config from file...")
-        f = open(config_file)
-        creds = json.load(f)
-        for var in AUTH_VARIABLES:
-            auth_config_object[var] = creds.get(var, '')
-        f.close()
+        try:
+            with open(config_file, 'r') as f:
+                creds = json.load(f)
+            for var in AUTH_VARIABLES:
+                auth_config_object[var] = creds.get(var, '')
+        except FileNotFoundError:
+            raise ValueError(f"Configuration file not found: {config_file}")
+        except json.JSONDecodeError:
+            raise ValueError(f"Invalid JSON in configuration file: {config_file}")
 
     # If not, check if the environment variables are set
     # AFAICT, app_id is never used in the rest of the code, so it isn't necessary
@@ -162,10 +207,42 @@ def servicepytan_connect(
             if auth_var:
                 auth_config_object[var] = auth_var
             else:
-                logger.info(f"Environment variable {var} not found or provided in function. Defaulting to empty string.")
-                auth_config_object[var] = ''
+                logger.debug(f"Environment variable {var} not found or provided in function.")
+                if var not in ['SERVICETITAN_APP_ID', 'SERVICETITAN_TIMEZONE', 'SERVICETITAN_API_ENVIRONMENT']:
+                    auth_config_object[var] = ''
 
+    # Validate credentials before returning
+    _validate_credentials(auth_config_object)
+    
     return auth_config_object
+
+def _get_cache_key(client_id: str, auth_root: str) -> str:
+    """Generate a cache key for token storage.
+    
+    Args:
+        client_id: OAuth client ID
+        auth_root: Authentication root URL
+        
+    Returns:
+        str: Cache key for this client/environment combination
+    """
+    return f"{client_id}:{auth_root}"
+
+def _is_token_expired(token_data: Dict) -> bool:
+    """Check if a cached token is expired.
+    
+    Args:
+        token_data: Dictionary containing token and expiration info
+        
+    Returns:
+        bool: True if token is expired or will expire within 60 seconds
+    """
+    if 'expires_at' not in token_data:
+        return True
+    
+    # Add 60 second buffer to avoid using tokens that expire immediately
+    buffer_time = 60
+    return time.time() + buffer_time >= token_data['expires_at']
 
 def request_auth_token(auth_root_url: str, client_id, client_secret):
   """Fetches Auth Token.
@@ -173,14 +250,15 @@ def request_auth_token(auth_root_url: str, client_id, client_secret):
   Retrieves authentication token for completing a request against the API
 
   Args:
+      auth_root_url: The authentication root URL
       client_id: String, provided from the integration settings
       client_secret: String, provided from the integration settings
 
   Returns:
-      Authentication token
+      dict: Authentication response containing token and expiration info
 
   Raises:
-      TBD
+      requests.HTTPError: If the authentication request fails
   """
 
   url: str = f"{auth_root_url}/connect/token"
@@ -196,16 +274,24 @@ def request_auth_token(auth_root_url: str, client_id, client_secret):
 
   response = requests.post(url, headers=headers, data=data)
   if response.status_code != requests.codes.ok:
-    logger.error(f"Error fetching auth token (url={url}, header={headers}, data={data}): {response.text}")
+    # Don't log credentials in error messages
+    logger.error(f"Error fetching auth token (status={response.status_code}): {response.text}")
     response.raise_for_status()
 
-  return response.json()
+  token_response = response.json()
+  
+  # Calculate expiration time
+  expires_in = token_response.get('expires_in', 3600)  # Default to 1 hour
+  token_response['expires_at'] = time.time() + expires_in
+  
+  return token_response
 
 def get_auth_token(conn):
-  """Fetches Auth Token using the connection configuration.
+  """Fetches Auth Token using the connection configuration with caching.
 
   Retrieves the CLIENT_ID and CLIENT_SECRET entries from the connection object
-  and requests an authentication token from the ServiceTitan API.
+  and requests an authentication token from the ServiceTitan API. Implements
+  intelligent caching to avoid unnecessary token requests.
 
   Args:
       conn: Dictionary containing the credential configuration
@@ -215,11 +301,28 @@ def get_auth_token(conn):
 
   Raises:
       requests.HTTPError: If the authentication request fails
+      KeyError: If required credentials are missing
   """
-  # Read File
   client_id = conn['SERVICETITAN_CLIENT_ID']
   client_secret = conn['SERVICETITAN_CLIENT_SECRET']
-  return request_auth_token(conn["auth_root"], client_id, client_secret)["access_token"]
+  auth_root = conn["auth_root"]
+  
+  cache_key = _get_cache_key(client_id, auth_root)
+  
+  with _cache_lock:
+    # Check if we have a valid cached token
+    if cache_key in _token_cache and not _is_token_expired(_token_cache[cache_key]):
+      logger.debug("Using cached authentication token")
+      return f"Bearer {_token_cache[cache_key]['access_token']}"
+    
+    # Request new token
+    logger.debug("Requesting new authentication token")
+    token_data = request_auth_token(auth_root, client_id, client_secret)
+    
+    # Cache the token
+    _token_cache[cache_key] = token_data
+    
+    return f"Bearer {token_data['access_token']}"
 
 def get_app_key(conn):
   """Fetches App Key from the connection configuration.
@@ -282,3 +385,21 @@ def get_auth_headers(conn):
       "Authorization": get_auth_token(conn),
       "ST-App-Key": get_app_key(conn)
   }
+
+def clear_token_cache(conn: Optional[Dict] = None):
+    """Clear cached authentication tokens.
+    
+    Args:
+        conn: Optional connection config. If provided, only clears tokens for this connection.
+              If None, clears all cached tokens.
+    """
+    with _cache_lock:
+        if conn:
+            client_id = conn['SERVICETITAN_CLIENT_ID']
+            auth_root = conn["auth_root"]
+            cache_key = _get_cache_key(client_id, auth_root)
+            _token_cache.pop(cache_key, None)
+            logger.debug(f"Cleared cached token for {cache_key}")
+        else:
+            _token_cache.clear()
+            logger.debug("Cleared all cached tokens")

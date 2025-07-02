@@ -1,4 +1,4 @@
-from servicepytan.utils import request_json, check_default_options, endpoint_url
+from servicepytan.utils import request_json_with_retry, check_default_options, endpoint_url
 
 import logging
 
@@ -50,7 +50,7 @@ class Endpoint:
     """
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, conn=self.conn)
     options = check_default_options(query)
-    return request_json(url, options=options, payload="", conn=self.conn, request_type="GET")
+    return request_json_with_retry(url, options=options, payload="", conn=self.conn, request_type="GET")
 
   def get_many(self, query={}, id="", modifier=""):
     """Retrieve one page of results with query options to customize.
@@ -77,7 +77,7 @@ class Endpoint:
     """
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, conn=self.conn)
     options = check_default_options(query)
-    return request_json(url, options, payload="", conn=self.conn, request_type="GET")
+    return request_json_with_retry(url, options, payload="", conn=self.conn, request_type="GET")
   
   def get_all(self, query={}, id="", modifier=""):
     """Retrieve all pages of results for your query.
@@ -142,7 +142,7 @@ class Endpoint:
         >>> created_job = endpoint.create(new_job)
     """
     url = endpoint_url(self.folder, self.endpoint, conn=self.conn)
-    return request_json(url, options={}, json_payload=payload, conn=self.conn, request_type="POST")
+    return request_json_with_retry(url, options={}, json_payload=payload, conn=self.conn, request_type="POST")
 
   def update(self, id, payload, modifier="", request_type="PUT"):
     """Update an existing record via PUT or PATCH request.
@@ -169,7 +169,7 @@ class Endpoint:
         >>> updated_job = endpoint.update("12345678", updates, request_type="PATCH")
     """
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, conn=self.conn)
-    return request_json(url, options={}, payload=payload, conn=self.conn, request_type=request_type)
+    return request_json_with_retry(url, options={}, payload=payload, conn=self.conn, request_type=request_type)
 
   def delete(self, id, modifier=""):
     """Delete a record via DELETE request.
@@ -191,7 +191,7 @@ class Endpoint:
         >>> result = endpoint.delete("12345678")
     """
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}", conn=self.conn)
-    return request_json(url, options={}, payload="", conn=self.conn, request_type="DEL")
+    return request_json_with_retry(url, options={}, payload="", conn=self.conn, request_type="DEL")
 
   def delete_subitem(self, id, modifier_id, modifier):
     """Delete a sub-item of a record via DELETE request.
@@ -216,7 +216,7 @@ class Endpoint:
         >>> result = endpoint.delete_subitem("12345678", "note_id", "notes")
     """
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}/{modifier_id}", conn=self.conn)
-    return request_json(url, options={}, payload="", conn=self.conn, request_type="DEL")
+    return request_json_with_retry(url, options={}, payload="", conn=self.conn, request_type="DEL")
 
   def export_one(self, export_endpoint, export_from="", include_recent_changes=False):
     """Export one page of data from an export endpoint.
@@ -242,7 +242,7 @@ class Endpoint:
         >>> next_page = endpoint.export_one("jobs", export_from=export_data["continueFrom"])
     """
     url = endpoint_url(self.folder, "export", id="", modifier=f"{export_endpoint}", conn=self.conn)
-    return request_json(url, options={"from": export_from, "includeRecentChanges": include_recent_changes}, payload="", conn=self.conn, request_type="GET")
+    return request_json_with_retry(url, options={"from": export_from, "includeRecentChanges": include_recent_changes}, payload="", conn=self.conn, request_type="GET")
 
   def export_all(self, export_endpoint, export_from="", include_recent_changes=False):
     """Export all data from an export endpoint.

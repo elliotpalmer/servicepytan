@@ -38,7 +38,8 @@ def request_json(url, options={}, payload={}, conn=None, request_type="GET", jso
   headers = get_auth_headers(conn)
   response = requests.request(request_type, url, data=payload, headers=headers, params=options, json=json_payload)
   if response.status_code != requests.codes.ok:
-    logger.error(f"Error fetching data (url={url}, heads={headers}, data={payload}, json={json_payload}): {response.text}")
+    # Don't log sensitive credentials in error messages
+    logger.error(f"Error fetching data (url={url}, status={response.status_code}): {response.text}")
     response.raise_for_status()
 
   return response.json()
@@ -174,11 +175,12 @@ def sleep_with_countdown(sleep_time):
   logger.info("")
   pass
 
-def request_json_with_retry(url, options={}, payload="", conn=None, request_type="GET", json_payload=""):
+def request_json_with_retry(url, options={}, payload="", conn=None, request_type="GET", json_payload="", max_retries=3):
   """Makes the request to the API and returns JSON with automatic retry for rate limits.
 
   Enhanced version of request_json that automatically handles rate limiting by
-  detecting 429 status codes and retrying after the specified wait time.
+  detecting 429 status codes and retrying after the specified wait time with
+  exponential backoff for other errors.
 
   Args:
       url: The complete URL for the API request
@@ -187,12 +189,13 @@ def request_json_with_retry(url, options={}, payload="", conn=None, request_type
       conn: Dictionary containing the credential configuration
       request_type: HTTP method type ("GET", "POST", "PUT", "PATCH", "DEL")
       json_payload: Dictionary containing JSON data for the request body
+      max_retries: Maximum number of retries for non-rate-limit errors
 
   Returns:
       dict: JSON response from the API
 
   Raises:
-      requests.HTTPError: If the API request fails (non-rate-limit errors)
+      requests.HTTPError: If the API request fails after all retries
       
   Examples:
       >>> response = request_json_with_retry(
@@ -200,14 +203,47 @@ def request_json_with_retry(url, options={}, payload="", conn=None, request_type
       ...     options={"pageSize": 100},
       ...     conn=connection_config
       ... )
-      >>> # Automatically retries if rate limited
+      >>> # Automatically retries if rate limited or other transient errors
   """
-  response = request_json(url, options=options, payload=payload, conn=conn, request_type=request_type, json_payload=json_payload)
-  if "traceId" in response:
-    if response['status'] == 429:
-        sleep_time = response['title'].split(" ")[-2]
-        logger.warning("Rate Limit Exceeded. Retrying in {} seconds...".format(sleep_time))
-        sleep_with_countdown(int(sleep_time))
-        response = request_json_with_retry(url, options=options, payload=payload, conn=conn, request_type=request_type, json_payload=json_payload)
+  import random
   
-  return response
+  for attempt in range(max_retries + 1):
+    try:
+      response = request_json(url, options=options, payload=payload, conn=conn, request_type=request_type, json_payload=json_payload)
+      
+      # Check for rate limiting in response body (ServiceTitan specific)
+      if "traceId" in response and response.get('status') == 429:
+          sleep_time = response['title'].split(" ")[-2] if 'title' in response else "30"
+          logger.warning("Rate Limit Exceeded. Retrying in {} seconds...".format(sleep_time))
+          sleep_with_countdown(int(sleep_time))
+          continue
+      
+      return response
+      
+    except requests.exceptions.HTTPError as e:
+      if e.response.status_code == 429:
+        # Rate limiting via HTTP status code
+        retry_after = e.response.headers.get('Retry-After', '30')
+        logger.warning(f"Rate limited (HTTP 429). Retrying in {retry_after} seconds...")
+        sleep_with_countdown(int(retry_after))
+        continue
+      elif e.response.status_code >= 500 and attempt < max_retries:
+        # Server errors - retry with exponential backoff
+        wait_time = (2 ** attempt) + random.uniform(0, 1)
+        logger.warning(f"Server error (HTTP {e.response.status_code}). Retrying in {wait_time:.1f} seconds... (attempt {attempt + 1}/{max_retries + 1})")
+        time.sleep(wait_time)
+        continue
+      else:
+        # Re-raise for client errors or final attempt
+        raise
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+      if attempt < max_retries:
+        wait_time = (2 ** attempt) + random.uniform(0, 1)
+        logger.warning(f"Connection error: {str(e)}. Retrying in {wait_time:.1f} seconds... (attempt {attempt + 1}/{max_retries + 1})")
+        time.sleep(wait_time)
+        continue
+      else:
+        raise
+  
+  # This should never be reached, but just in case
+  raise Exception(f"Max retries ({max_retries}) exceeded for {url}")
