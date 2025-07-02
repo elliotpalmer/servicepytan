@@ -7,19 +7,80 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 def get_report_categories(conn=None):
-    """Get a list of report categories"""
+    """Get a list of report categories from ServiceTitan.
+    
+    Retrieves all available report categories from the ServiceTitan reporting API.
+    These categories are used to organize reports and are required for accessing
+    specific reports.
+    
+    Args:
+        conn: Dictionary containing the credential configuration
+        
+    Returns:
+        dict: JSON response containing list of report categories
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> categories = get_report_categories(conn)
+        >>> for category in categories['data']:
+        ...     print(category['name'])
+    """
     return request_json(endpoint_url('reporting', 'report-categories', conn=conn), conn=conn)
 
 def get_report_list(report_category, conn=None):
-    """Get a list of reports for a given report category"""
+    """Get a list of reports for a given report category.
+    
+    Retrieves all available reports within a specific category from the
+    ServiceTitan reporting API.
+    
+    Args:
+        report_category: The category ID or name to retrieve reports for
+        conn: Dictionary containing the credential configuration
+        
+    Returns:
+        dict: JSON response containing list of reports in the category
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> reports = get_report_list("jobs", conn)
+        >>> for report in reports['data']:
+        ...     print(f"{report['id']}: {report['name']}")
+    """
     return request_json(endpoint_url('reporting', f'report-category/{report_category}/reports', conn=conn), conn=conn)
 
 def get_dynamic_set_list(dynamic_set_id,conn=None):
-    """Get a list of dynamic sets"""
+    """Get a list of dynamic value sets for report parameters.
+    
+    Retrieves the available values for dynamic parameters in ServiceTitan reports.
+    Dynamic sets contain the possible values that can be selected for certain
+    report parameters.
+    
+    Args:
+        dynamic_set_id: The ID of the dynamic value set to retrieve
+        conn: Dictionary containing the credential configuration
+        
+    Returns:
+        dict: JSON response containing the dynamic value set data
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> dynamic_values = get_dynamic_set_list("employees", conn)
+        >>> for value in dynamic_values['data']:
+        ...     print(f"{value['id']}: {value['name']}")
+    """
     return request_json(endpoint_url('reporting', f'dynamic-value-sets/{dynamic_set_id}', conn=conn), conn=conn)
 
 class Report:
   """Primary class for retrieving Reporting Endpoint Data.
+
+  Provides a comprehensive interface for working with ServiceTitan reports,
+  including parameter management, metadata retrieval, and data extraction.
 
   Attributes:
       category: A string representing the report category. Find list of categories with get_report_categories().
@@ -27,7 +88,13 @@ class Report:
       conn: a dictionary containing the credential config.
   """
   def __init__(self, category, report_id, conn=None):
-    """Inits DataService with configuration file and authentication settings."""
+    """Initialize Report with category, report ID, and connection configuration.
+    
+    Args:
+        category: The report category (e.g., "jobs", "customers")
+        report_id: The specific report ID within the category
+        conn: Dictionary containing the credential configuration
+    """
     self.conn = conn
     # self.timezone = get_timezone_by_file(conn)
     self.category = category
@@ -36,7 +103,20 @@ class Report:
     self.metadata = self.get_metadata()
 
   def add_params(self, name, value):
-    """add a parameter to the report"""
+    """Add or update a parameter for the report.
+    
+    Adds a new parameter to the report's parameter list. If the parameter
+    already exists, it updates the existing value.
+    
+    Args:
+        name: The parameter name as defined in the report metadata
+        value: The value to set for the parameter
+        
+    Examples:
+        >>> report = Report("jobs", "job-summary", conn)
+        >>> report.add_params("StartDate", "2024-01-01")
+        >>> report.add_params("BusinessUnit", "12345")
+    """
     param_keys = [param["name"] for param in self.params["parameters"]]
     if name in param_keys:
       logger.info(f"Parameter '{name}' already exists. Updating value from '{self.params['parameters'][param_keys.index(name)]['value']}' to '{value}'...")
@@ -45,7 +125,18 @@ class Report:
       self.params["parameters"].append({"name": name, "value": value})
 
   def update_params(self, name, value):
-    """update a parameter in the report"""
+    """Update an existing parameter in the report.
+    
+    Updates the value of an existing parameter. If the parameter doesn't exist,
+    it will be added to the parameter list.
+    
+    Args:
+        name: The parameter name to update
+        value: The new value for the parameter
+        
+    Examples:
+        >>> report.update_params("StartDate", "2024-02-01")
+    """
     param_keys = [param["name"] for param in self.params["parameters"]]
     if name in param_keys:
       self.params["parameters"][param_keys.index(name)]["value"] = value
@@ -54,17 +145,54 @@ class Report:
       self.add_params(name, value)
 
   def get_params(self):
-    """get report parameters"""
+    """Get the current report parameters.
+    
+    Returns the current parameter configuration for the report.
+    
+    Returns:
+        dict: Dictionary containing the report parameters
+        
+    Examples:
+        >>> current_params = report.get_params()
+        >>> print(current_params)
+    """
     return self.params
 
   def get_metadata(self):
-    """get report metadata"""
+    """Get report metadata including available parameters and their types.
+    
+    Retrieves comprehensive metadata about the report, including parameter
+    definitions, data types, required fields, and available values.
+    
+    Returns:
+        dict: JSON response containing report metadata
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> metadata = report.get_metadata()
+        >>> for param in metadata['parameters']:
+        ...     print(f"{param['name']}: {param['dataType']}")
+    """
     endpoint = f"report-category/{self.category}/reports/{self.report_id}"
     url = endpoint_url("reporting",endpoint, conn=self.conn)
     return request_json_with_retry(url, conn=self.conn)
 
   def show_param_types(self):
-    """show parameter types"""
+    """Display parameter types and requirements in a formatted way.
+    
+    Prints a formatted list of all report parameters showing their names,
+    data types, whether they're required, and any available values.
+    
+    Examples:
+        >>> report.show_param_types()
+        >>> # Output:
+        >>> # [*] - StartDate: DateTime
+        >>> # [ ] - BusinessUnit: Long (dynamicSetId: 123)
+        >>> #   - Business Unit 1
+        >>> #   - Business Unit 2
+    """
     for param in self.metadata["parameters"]:
       dynamic_set_id = ""
       required = "[ ]"
@@ -80,7 +208,28 @@ class Report:
         logger.info(f"  - {value}")
 
   def get_data(self, params="", page=1, page_size=5000):
-    """get report data"""
+    """Get report data for a specific page.
+    
+    Retrieves report data from ServiceTitan for a single page. Used internally
+    by get_all_data() for pagination, but can be used directly for custom
+    pagination handling.
+    
+    Args:
+        params: Parameter configuration (uses instance params if empty)
+        page: Page number to retrieve (1-based)
+        page_size: Number of records per page (max 5000)
+        
+    Returns:
+        dict: JSON response containing report data and pagination info
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> report.add_params("StartDate", "2024-01-01")
+        >>> page_data = report.get_data(page=1, page_size=1000)
+        >>> print(f"Retrieved {len(page_data['data'])} records")
+    """
     if params == "":
       params = self.params
     options = {"page": page, "pageSize": page_size, "includeTotal": True}
@@ -90,7 +239,33 @@ class Report:
               conn=self.conn, request_type="POST")
   
   def get_all_data(self, params="", page_size=5000, timeout_min=60):
-    """get all report data"""
+    """Get all report data with automatic pagination.
+    
+    Retrieves all available data from the report by automatically handling
+    pagination. Includes intelligent page size optimization and timeout
+    protection to prevent excessively long-running requests.
+    
+    Args:
+        params: Parameter configuration (uses instance params if empty)
+        page_size: Number of records per page (max 5000)
+        timeout_min: Maximum time in minutes before aborting the request
+        
+    Returns:
+        dict: Dictionary containing 'data' (list of records) and 'fields' (metadata)
+        
+    Raises:
+        requests.HTTPError: If any API request fails
+        
+    Examples:
+        >>> report = Report("jobs", "job-summary", conn)
+        >>> report.add_params("StartDate", "2024-01-01")
+        >>> report.add_params("EndDate", "2024-01-31")
+        >>> all_data = report.get_all_data()
+        >>> print(f"Retrieved {len(all_data['data'])} total records")
+        
+        >>> # For large datasets, use smaller timeout
+        >>> large_report_data = report.get_all_data(timeout_min=30)
+    """
     page = 1
     data = []
     fields = []

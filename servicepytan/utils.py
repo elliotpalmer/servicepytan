@@ -9,22 +9,31 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 def request_json(url, options={}, payload={}, conn=None, request_type="GET", json_payload={}):
-  """Makes the request to the API and returns JSON
+  """Makes the request to the API and returns JSON.
 
-  Retrieves JSON response from provided URL with a number of parameters to customize the request.
+  Sends HTTP requests to the ServiceTitan API with proper authentication headers
+  and handles various request types including GET, POST, PUT, PATCH, and DELETE.
 
   Args:
-      url: A string with the full URL request
-      options: A dictionary defining the parameters to add to the url for filtering
-      payload: A dictionary defining the data object to create or update
-      conn: a dictionary containing the credential config.
-      request_type: A string to define the REST endpoint type [GET, POST, PUT, PATCH, DEL].
+      url: The complete URL for the API request
+      options: Dictionary of query parameters to add to the URL for filtering
+      payload: Dictionary containing form data for the request body
+      conn: Dictionary containing the credential configuration
+      request_type: HTTP method type ("GET", "POST", "PUT", "PATCH", "DEL")
+      json_payload: Dictionary containing JSON data for the request body
 
   Returns:
-      JSON Object
+      dict: JSON response from the API
 
   Raises:
-      TBD
+      requests.HTTPError: If the API request fails
+      
+  Examples:
+      >>> response = request_json(
+      ...     "https://api.servicetitan.io/jpm/v2/tenant/123/jobs",
+      ...     options={"pageSize": 100},
+      ...     conn=connection_config
+      ... )
   """
   headers = get_auth_headers(conn)
   response = requests.request(request_type, url, data=payload, headers=headers, params=options, json=json_payload)
@@ -35,7 +44,23 @@ def request_json(url, options={}, payload={}, conn=None, request_type="GET", jso
   return response.json()
 
 def check_default_options(options):
-  """Add sensible defaults to options when not defined"""
+  """Add sensible defaults to options when not defined.
+  
+  Ensures that API request options have reasonable defaults to prevent
+  issues with pagination and data retrieval.
+  
+  Args:
+      options: Dictionary of request options/parameters
+      
+  Returns:
+      dict: Options dictionary with defaults applied
+      
+  Examples:
+      >>> options = check_default_options({})
+      >>> # Returns: {"pageSize": 100}
+      >>> options = check_default_options({"pageSize": 50})
+      >>> # Returns: {"pageSize": 50} (unchanged)
+  """
   # TODO: Add ability to read from a configuration file
   if "pageSize" not in options:
     options["pageSize"] = 100
@@ -43,23 +68,31 @@ def check_default_options(options):
   return options
 
 def endpoint_url(folder, endpoint, id="", modifier="", conn=None, tenant_id=""):
-  """Constructs API request URL based on key parameters
+  """Constructs API request URL based on key parameters.
 
-  Retrives JSON response from provided URL with a number of parameters to customize the request.
+  Builds the complete ServiceTitan API URL using the standard URL structure
+  and allows for various endpoint configurations including specific IDs and modifiers.
 
   Args:
-      folder: A string based on the endpoint groupings
-      endpoint: A string indicating the endpoint you want to address.
-      id: A string for the id of the endpoint object you're addressing.
-      modifier: A string to modify the url to address the additional endpoint.
-      conn: a dictionary containing the credential config.
-      tenant_id: A string to manually adjust the tenant id.
+      folder: The API endpoint category/folder (e.g., "jpm", "sales", "inventory")
+      endpoint: The specific endpoint within the folder (e.g., "jobs", "estimates")
+      id: Optional specific record ID to append to the URL
+      modifier: Optional additional path segment for specialized endpoints
+      conn: Dictionary containing the credential configuration
+      tenant_id: Optional manual override for the tenant ID
 
   Returns:
-      A URL String
+      str: Complete API URL ready for requests
 
   Raises:
-      TBD
+      KeyError: If required connection information is missing
+      
+  Examples:
+      >>> url = endpoint_url("jpm", "jobs", conn=conn)
+      >>> # Returns: "https://api.servicetitan.io/jpm/v2/tenant/12345/jobs"
+      
+      >>> url = endpoint_url("jpm", "jobs", id="67890", modifier="notes", conn=conn)
+      >>> # Returns: "https://api.servicetitan.io/jpm/v2/tenant/12345/jobs/67890/notes"
   """  
   # Adds ability to manually switch up the Tenant ID for apps that have multiples
   if tenant_id == "":
@@ -71,13 +104,20 @@ def endpoint_url(folder, endpoint, id="", modifier="", conn=None, tenant_id=""):
   return url
     
 def create_credential_file(name="servicepytan_config.json"):
-  """Creates and saves an unfilled configuration file.
+  """Creates and saves an unfilled configuration file template.
+
+  Generates a JSON configuration file with empty credential fields that can be
+  filled in with actual ServiceTitan API credentials.
 
   Args:
-      name: a dictionary containing the credential config
+      name: Filename for the configuration file
 
   Returns:
-      A filepath string
+      str: Path to the created configuration file
+      
+  Examples:
+      >>> filepath = create_credential_file("my_config.json")
+      >>> # Creates a file with empty credential template
   """  
   file = open(name, 'w')
   file.write(
@@ -93,23 +133,41 @@ def create_credential_file(name="servicepytan_config.json"):
   return name
 
 def get_timezone_by_file(conn=None):
-  """Retrieves timezone from the configuration file.
+  """Retrieves timezone from the connection configuration.
+
+  Extracts the timezone setting from the connection configuration object,
+  defaulting to "UTC" if no timezone is specified.
 
   Args:
-      conn: a dictionary containing the credential config
+      conn: Dictionary containing the credential configuration
 
   Returns:
-      Timezone string
+      str: Timezone string (e.g., "America/New_York", "UTC")
+      
+  Examples:
+      >>> tz = get_timezone_by_file(conn)
+      >>> # Returns: "America/New_York" or "UTC" if not specified
   """    
   # Read File
-  if "SERVICETITAN_TIMEZONE" in conn:
-    timezone = config['SERVICETITAN_TIMEZONE']
+  if conn and "SERVICETITAN_TIMEZONE" in conn:
+    timezone = conn['SERVICETITAN_TIMEZONE']
   else:
     timezone = "UTC"
   return timezone
 
 def sleep_with_countdown(sleep_time):
-  """Sleeps for a given amount of time with a countdown"""
+  """Sleeps for a given amount of time with a countdown display.
+  
+  Provides a visual countdown timer during sleep periods, typically used
+  when handling rate limiting or waiting between API requests.
+  
+  Args:
+      sleep_time: Number of seconds to sleep
+      
+  Examples:
+      >>> sleep_with_countdown(30)
+      >>> # Displays: "Trying again in 30 seconds...", "29 seconds...", etc.
+  """
   for i in range(sleep_time, 0, -1):
       logger.info("Trying again in {} seconds...       ".format(i),end='\r')
       time.sleep(1)
@@ -117,24 +175,32 @@ def sleep_with_countdown(sleep_time):
   pass
 
 def request_json_with_retry(url, options={}, payload="", conn=None, request_type="GET", json_payload=""):
-  """Makes the request to the API and returns JSON with a retry
+  """Makes the request to the API and returns JSON with automatic retry for rate limits.
 
-  Retrieves JSON response from provided URL with a number of parameters to customize the request.
+  Enhanced version of request_json that automatically handles rate limiting by
+  detecting 429 status codes and retrying after the specified wait time.
 
   Args:
-      url: A string with the full URL request
-      options: A dictionary defining the parameters to add to the url for filtering
-      payload: A dictionary defining the data object to create or update
-      conn: a dictionary containing the credential config.
-      request_type: A string to define the REST endpoint type [GET, POST, PUT, PATCH, DEL].
-      retry_count: An integer for the number of times to retry the request.
-      sleep_time: An integer for the number of seconds to sleep between retries.
+      url: The complete URL for the API request
+      options: Dictionary of query parameters to add to the URL for filtering
+      payload: Dictionary containing form data for the request body
+      conn: Dictionary containing the credential configuration
+      request_type: HTTP method type ("GET", "POST", "PUT", "PATCH", "DEL")
+      json_payload: Dictionary containing JSON data for the request body
 
   Returns:
-      JSON Object
+      dict: JSON response from the API
 
   Raises:
-      TBD
+      requests.HTTPError: If the API request fails (non-rate-limit errors)
+      
+  Examples:
+      >>> response = request_json_with_retry(
+      ...     "https://api.servicetitan.io/jpm/v2/tenant/123/jobs",
+      ...     options={"pageSize": 100},
+      ...     conn=connection_config
+      ... )
+      >>> # Automatically retries if rate limited
   """
   response = request_json(url, options=options, payload=payload, conn=conn, request_type=request_type, json_payload=json_payload)
   if "traceId" in response:
