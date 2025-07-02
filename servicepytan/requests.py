@@ -26,25 +26,82 @@ class Endpoint:
 
   # Main Request Types
   def get_one(self, id, modifier="", query={}):
-    """Retrieve one record using the record id. Modifier is used for further endpoints."""
+    """Retrieve one record using the record id.
+    
+    Fetches a single record from the API endpoint using its unique identifier.
+    Optionally supports modifiers to access sub-resources and query parameters
+    for additional filtering.
+    
+    Args:
+        id: The unique identifier of the record to retrieve
+        modifier: Optional sub-resource path (e.g., "notes" to get job notes)
+        query: Optional dictionary of query parameters for filtering
+        
+    Returns:
+        dict: JSON response containing the requested record data
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> endpoint = Endpoint("jpm", "jobs", conn)
+        >>> job = endpoint.get_one(id="12345678")
+        >>> job_notes = endpoint.get_one(id="12345678", modifier="notes")
+    """
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, conn=self.conn)
     options = check_default_options(query)
     return request_json(url, options=options, payload="", conn=self.conn, request_type="GET")
 
   def get_many(self, query={}, id="", modifier=""):
-    """
-    Retrieve one page of results with query options to customize.
+    """Retrieve one page of results with query options to customize.
 
-    Even though this is a "get_many" request, we can still use an id and modifier.
-    For example, this is how we get Notes for a specific Job.
-    The id would be the Job ID and the modifier would be "notes".
+    Fetches a single page of results from the API endpoint. Even though this is a 
+    "get_many" request, it can still use an id and modifier for accessing 
+    sub-resources (e.g., getting Notes for a specific Job).
+    
+    Args:
+        query: Dictionary of query parameters for filtering and pagination
+        id: Optional record ID for accessing sub-resources
+        modifier: Optional sub-resource path
+        
+    Returns:
+        dict: JSON response containing paginated results with 'data' and 'hasMore' fields
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> endpoint = Endpoint("jpm", "jobs", conn)
+        >>> page_data = endpoint.get_many(query={"pageSize": 50, "page": 1})
+        >>> job_notes = endpoint.get_many(id="12345678", modifier="notes")
     """
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, conn=self.conn)
     options = check_default_options(query)
     return request_json(url, options, payload="", conn=self.conn, request_type="GET")
   
   def get_all(self, query={}, id="", modifier=""):
-    """Retrive all pages in your query."""
+    """Retrieve all pages of results for your query.
+    
+    Automatically handles pagination by making multiple API calls to fetch all
+    available records that match the query criteria. This method continues
+    fetching pages until no more data is available.
+    
+    Args:
+        query: Dictionary of query parameters for filtering (page parameter will be managed automatically)
+        id: Optional record ID for accessing sub-resources
+        modifier: Optional sub-resource path
+        
+    Returns:
+        list: Combined list of all records from all pages
+        
+    Raises:
+        requests.HTTPError: If any API request fails
+        
+    Examples:
+        >>> endpoint = Endpoint("jpm", "jobs", conn)
+        >>> all_jobs = endpoint.get_all(query={"jobStatus": "Completed"})
+        >>> all_job_notes = endpoint.get_all(id="12345678", modifier="notes")
+    """
     query["page"] = "1"
     logger.info(query)
     response = self.get_many(query=query, id=id, modifier=modifier)
@@ -61,32 +118,155 @@ class Endpoint:
     return data
 
   def create(self, payload):
-    """Method that corresponds to a POST request for creating objects"""
+    """Create a new record via POST request.
+    
+    Sends a POST request to create a new resource in the API endpoint.
+    The payload should contain all required fields for the resource type.
+    
+    Args:
+        payload: Dictionary containing the data for the new record
+        
+    Returns:
+        dict: JSON response from the API, typically containing the created record
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> endpoint = Endpoint("jpm", "jobs", conn)
+        >>> new_job = {
+        ...     "summary": "New Job",
+        ...     "customerId": 12345,
+        ...     "businessUnitId": 67890
+        ... }
+        >>> created_job = endpoint.create(new_job)
+    """
     url = endpoint_url(self.folder, self.endpoint, conn=self.conn)
     return request_json(url, options={}, json_payload=payload, conn=self.conn, request_type="POST")
 
   def update(self, id, payload, modifier="", request_type="PUT"):
-    """Method that corresponds to PUT or POST request for updating objects. Defaults to PUT"""
+    """Update an existing record via PUT or PATCH request.
+    
+    Sends a PUT or PATCH request to update an existing resource. PUT is used
+    for complete updates while PATCH can be used for partial updates.
+    
+    Args:
+        id: The unique identifier of the record to update
+        payload: Dictionary containing the updated data
+        modifier: Optional sub-resource path for updating specific parts
+        request_type: HTTP method type ("PUT" or "PATCH"), defaults to "PUT"
+        
+    Returns:
+        dict: JSON response from the API
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> endpoint = Endpoint("jpm", "jobs", conn)
+        >>> updates = {"summary": "Updated Job Summary"}
+        >>> updated_job = endpoint.update("12345678", updates)
+        >>> updated_job = endpoint.update("12345678", updates, request_type="PATCH")
+    """
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, conn=self.conn)
     return request_json(url, options={}, payload=payload, conn=self.conn, request_type=request_type)
 
   def delete(self, id, modifier=""):
-    """Method that corresponds to a DEL request for deleting objects"""
+    """Delete a record via DELETE request.
+    
+    Sends a DELETE request to remove a resource from the API endpoint.
+    
+    Args:
+        id: The unique identifier of the record to delete
+        modifier: Optional sub-resource path for deleting specific parts
+        
+    Returns:
+        dict: JSON response from the API
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> endpoint = Endpoint("jpm", "jobs", conn)
+        >>> result = endpoint.delete("12345678")
+    """
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}", conn=self.conn)
     return request_json(url, options={}, payload="", conn=self.conn, request_type="DEL")
 
   def delete_subitem(self, id, modifier_id, modifier):
-    """Method that corresponds to a DEL request for deleting objects with subitems"""
+    """Delete a sub-item of a record via DELETE request.
+    
+    Sends a DELETE request to remove a specific sub-resource that belongs to
+    a parent resource. This is useful for deleting nested items like notes,
+    attachments, or other related records.
+    
+    Args:
+        id: The unique identifier of the parent record
+        modifier_id: The unique identifier of the sub-item to delete
+        modifier: The sub-resource type (e.g., "notes", "attachments")
+        
+    Returns:
+        dict: JSON response from the API
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> endpoint = Endpoint("jpm", "jobs", conn)
+        >>> result = endpoint.delete_subitem("12345678", "note_id", "notes")
+    """
     url = endpoint_url(self.folder, self.endpoint, id=id, modifier=f"{modifier}/{modifier_id}", conn=self.conn)
     return request_json(url, options={}, payload="", conn=self.conn, request_type="DEL")
 
   def export_one(self, export_endpoint, export_from="", include_recent_changes=False):
-    """Export Doc String"""
+    """Export one page of data from an export endpoint.
+    
+    Retrieves one page of export data from ServiceTitan's export endpoints,
+    which are optimized for bulk data extraction and typically return larger
+    datasets than regular API endpoints.
+    
+    Args:
+        export_endpoint: The specific export endpoint to call
+        export_from: Continuation token from previous export call for pagination
+        include_recent_changes: Whether to include recent changes in the export
+        
+    Returns:
+        dict: JSON response containing export data and pagination information
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> endpoint = Endpoint("jpm", "export", conn)
+        >>> export_data = endpoint.export_one("jobs")
+        >>> next_page = endpoint.export_one("jobs", export_from=export_data["continueFrom"])
+    """
     url = endpoint_url(self.folder, "export", id="", modifier=f"{export_endpoint}", conn=self.conn)
     return request_json(url, options={"from": export_from, "includeRecentChanges": include_recent_changes}, payload="", conn=self.conn, request_type="GET")
 
   def export_all(self, export_endpoint, export_from="", include_recent_changes=False):
-    """Export All Doc String"""
+    """Export all data from an export endpoint.
+    
+    Retrieves all available data from ServiceTitan's export endpoints by
+    automatically handling pagination. This method continues making requests
+    until all data has been retrieved.
+    
+    Args:
+        export_endpoint: The specific export endpoint to call
+        export_from: Starting continuation token (empty string to start from beginning)
+        include_recent_changes: Whether to include recent changes in the export
+        
+    Returns:
+        list: Combined list of all exported records
+        
+    Raises:
+        requests.HTTPError: If any API request fails
+        
+    Examples:
+        >>> endpoint = Endpoint("jpm", "export", conn)
+        >>> all_jobs = endpoint.export_all("jobs")
+        >>> recent_jobs = endpoint.export_all("jobs", include_recent_changes=True)
+    """
     counter = 1
     logger.info(f"{export_endpoint} {counter}: {export_from}")
     response = self.export_one(export_endpoint, export_from, include_recent_changes)
