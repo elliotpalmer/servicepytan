@@ -10,8 +10,10 @@ try:
 except ImportError:
     # Python < 3.11 compatibility
     from enum import Enum
+
     class StrEnum(str, Enum):
         pass
+
 
 import logging
 
@@ -21,29 +23,31 @@ logger = logging.getLogger(__name__)
 
 class ApiEnvironment(StrEnum):
     """Enumeration for ServiceTitan API environments.
-    
+
     This enum defines the available API environments for ServiceTitan,
     allowing users to switch between production and integration environments.
-    
+
     Attributes:
         PRODUCTION: Production environment for live data
         INTEGRATION: Integration environment for testing
     """
-    PRODUCTION  = "production",
+
+    PRODUCTION = ("production",)
     INTEGRATION = "integration"
+
 
 def get_auth_root_url(env: str = "production") -> str:
     """Get the authentication root URL for the specified environment.
-    
+
     Args:
         env: The API environment (production or integration)
-        
+
     Returns:
         str: The authentication root URL for the specified environment
-        
+
     Raises:
         ValueError: If the environment is not recognized
-        
+
     Examples:
         >>> get_auth_root_url(ApiEnvironment.PRODUCTION)
         'https://auth.servicetitan.io'
@@ -51,24 +55,25 @@ def get_auth_root_url(env: str = "production") -> str:
         'https://auth-integration.servicetitan.io'
     """
     if env == ApiEnvironment.PRODUCTION:
-            return "https://auth.servicetitan.io"
+        return "https://auth.servicetitan.io"
     elif env == ApiEnvironment.INTEGRATION:
-            return "https://auth-integration.servicetitan.io"
+        return "https://auth-integration.servicetitan.io"
     else:
-            raise ValueError(f"Unknown ApiEnvironment: {env}")
+        raise ValueError(f"Unknown ApiEnvironment: {env}")
+
 
 def get_api_root_url(env: str = "production") -> str:
     """Get the API root URL for the specified environment.
-    
+
     Args:
         env: The API environment (production or integration)
-        
+
     Returns:
         str: The API root URL for the specified environment
-        
+
     Raises:
         ValueError: If the environment is not recognized
-        
+
     Examples:
         >>> get_api_root_url(ApiEnvironment.PRODUCTION)
         'https://api.servicetitan.io'
@@ -76,34 +81,40 @@ def get_api_root_url(env: str = "production") -> str:
         'https://api-integration.servicetitan.io'
     """
     if env == ApiEnvironment.PRODUCTION:
-            return "https://api.servicetitan.io"
+        return "https://api.servicetitan.io"
     elif env == ApiEnvironment.INTEGRATION:
-            return "https://api-integration.servicetitan.io"
+        return "https://api-integration.servicetitan.io"
     else:
-            raise ValueError(f"Unknown ApiEnvironment: {env}")
+        raise ValueError(f"Unknown ApiEnvironment: {env}")
 
 
 AUTH_VARIABLES = [
-    'SERVICETITAN_APP_KEY',
-    'SERVICETITAN_TENANT_ID',
-    'SERVICETITAN_CLIENT_ID',
-    'SERVICETITAN_CLIENT_SECRET',
-    'SERVICETITAN_APP_ID',
-    'SERVICETITAN_TIMEZONE',
-
-    'SERVICETITAN_API_ENVIRONMENT'  # One of values of the ApiEnvironment enum
+    "SERVICETITAN_APP_KEY",
+    "SERVICETITAN_TENANT_ID",
+    "SERVICETITAN_CLIENT_ID",
+    "SERVICETITAN_CLIENT_SECRET",
+    "SERVICETITAN_APP_ID",
+    "SERVICETITAN_TIMEZONE",
+    "SERVICETITAN_API_ENVIRONMENT",  # One of values of the ApiEnvironment enum
 ]
 
+
 def servicepytan_connect(
-    api_environment: str=ApiEnvironment.PRODUCTION,
-    app_key:str=None, tenant_id:str=None, client_id:str=None, 
-    client_secret:str=None, app_id:str=None, timezone:str="UTC", config_file:str=None):
+    api_environment: str = ApiEnvironment.PRODUCTION,
+    app_key: str = None,
+    tenant_id: str = None,
+    client_id: str = None,
+    client_secret: str = None,
+    app_id: str = None,
+    timezone: str = "UTC",
+    config_file: str = None,
+):
     """Establish connection configuration for ServiceTitan API.
-    
+
     This function creates a configuration object with all necessary credentials
     and settings for connecting to the ServiceTitan API. It can source credentials
     from function parameters, a config file, or environment variables.
-    
+
     Args:
         api_environment: The API environment to use (production or integration)
         app_key: ServiceTitan application key
@@ -113,10 +124,10 @@ def servicepytan_connect(
         app_id: ServiceTitan application ID (optional)
         timezone: Timezone for date operations (defaults to "UTC")
         config_file: Path to JSON configuration file containing credentials
-        
+
     Returns:
         dict: Configuration object containing all necessary authentication settings
-        
+
     Examples:
         >>> # Using parameters
         >>> conn = servicepytan_connect(
@@ -126,10 +137,10 @@ def servicepytan_connect(
         ...     client_id="your_client_id",
         ...     client_secret="your_client_secret"
         ... )
-        
+
         >>> # Using config file
         >>> conn = servicepytan_connect(config_file="credentials.json")
-        
+
         >>> # Using environment variables (will auto-load from .env)
         >>> conn = servicepytan_connect()
     """
@@ -140,13 +151,10 @@ def servicepytan_connect(
         "SERVICETITAN_CLIENT_SECRET": client_secret,
         "SERVICETITAN_APP_ID": app_id,
         "SERVICETITAN_TIMEZONE": timezone,
-
-        'SERVICETITAN_API_ENVIRONMENT': api_environment,
-
+        "SERVICETITAN_API_ENVIRONMENT": api_environment,
         "auth_root": get_auth_root_url(api_environment),
         "api_root": get_api_root_url(api_environment),
     }
-
 
     # First check if the config_file is provided
     if config_file:
@@ -154,136 +162,155 @@ def servicepytan_connect(
         f = open(config_file)
         creds = json.load(f)
         for var in AUTH_VARIABLES:
-            auth_config_object[var] = creds.get(var, '')
+            auth_config_object[var] = creds.get(var, "")
         f.close()
 
     # If not, check if the environment variables are set
     # AFAICT, app_id is never used in the rest of the code, so it isn't necessary
-    elif not api_environment or not app_key or not tenant_id or not client_id or not client_secret:
+    elif (
+        not api_environment
+        or not app_key
+        or not tenant_id
+        or not client_id
+        or not client_secret
+    ):
         load_dotenv()
-        logger.info("Auth config not provided, loading from environment variables...")
+        logger.info(
+            "Auth config not provided, loading from environment variables..."
+        )
         for var in AUTH_VARIABLES:
             auth_var = os.environ.get(var)
             if auth_var:
                 auth_config_object[var] = auth_var
             else:
-                logger.info(f"Environment variable {var} not found or provided in function. Defaulting to empty string.")
-                auth_config_object[var] = ''
+                logger.info(
+                    f"Environment variable {var} not found or provided in function. Defaulting to empty string."
+                )
+                auth_config_object[var] = ""
 
     return auth_config_object
 
+
 def request_auth_token(auth_root_url: str, client_id, client_secret):
-  """Fetches Auth Token.
+    """Fetches Auth Token.
 
-  Retrieves authentication token for completing a request against the API
+    Retrieves authentication token for completing a request against the API
 
-  Args:
-      client_id: String, provided from the integration settings
-      client_secret: String, provided from the integration settings
+    Args:
+        client_id: String, provided from the integration settings
+        client_secret: String, provided from the integration settings
 
-  Returns:
-      Authentication token
+    Returns:
+        Authentication token
 
-  Raises:
-      TBD
-  """
+    Raises:
+        TBD
+    """
 
-  url: str = f"{auth_root_url}/connect/token"
+    url: str = f"{auth_root_url}/connect/token"
 
-  headers: dict = {
-    "Content-Type": "application/x-www-form-urlencoded",
-  }
-  data: dict = {
-    "grant_type": "client_credentials",
-    "client_id": client_id,
-    "client_secret": client_secret,
-  }
+    headers: dict = {
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+    data: dict = {
+        "grant_type": "client_credentials",
+        "client_id": client_id,
+        "client_secret": client_secret,
+    }
 
-  response = requests.post(url, headers=headers, data=data)
-  if response.status_code != requests.codes.ok:
-    logger.error(f"Error fetching auth token (url={url}, header={headers}, data={data}): {response.text}")
-    response.raise_for_status()
+    response = requests.post(url, headers=headers, data=data)
+    if response.status_code != requests.codes.ok:
+        logger.error(
+            f"Error fetching auth token (url={url}, header={headers}, data={data}): {response.text}"
+        )
+        response.raise_for_status()
 
-  return response.json()
+    return response.json()
+
 
 def get_auth_token(conn):
-  """Fetches Auth Token using the connection configuration.
+    """Fetches Auth Token using the connection configuration.
 
-  Retrieves the CLIENT_ID and CLIENT_SECRET entries from the connection object
-  and requests an authentication token from the ServiceTitan API.
+    Retrieves the CLIENT_ID and CLIENT_SECRET entries from the connection object
+    and requests an authentication token from the ServiceTitan API.
 
-  Args:
-      conn: Dictionary containing the credential configuration
+    Args:
+        conn: Dictionary containing the credential configuration
 
-  Returns:
-      str: Authentication token
+    Returns:
+        str: Authentication token
 
-  Raises:
-      requests.HTTPError: If the authentication request fails
-  """
-  # Read File
-  client_id = conn['SERVICETITAN_CLIENT_ID']
-  client_secret = conn['SERVICETITAN_CLIENT_SECRET']
-  return request_auth_token(conn["auth_root"], client_id, client_secret)["access_token"]
+    Raises:
+        requests.HTTPError: If the authentication request fails
+    """
+    # Read File
+    client_id = conn["SERVICETITAN_CLIENT_ID"]
+    client_secret = conn["SERVICETITAN_CLIENT_SECRET"]
+    return request_auth_token(conn["auth_root"], client_id, client_secret)[
+        "access_token"
+    ]
+
 
 def get_app_key(conn):
-  """Fetches App Key from the connection configuration.
+    """Fetches App Key from the connection configuration.
 
-  Retrieves the APP_KEY entry from the connection object.
+    Retrieves the APP_KEY entry from the connection object.
 
-  Args:
-      conn: Dictionary containing the credential configuration
+    Args:
+        conn: Dictionary containing the credential configuration
 
-  Returns:
-      str: ServiceTitan App Key
+    Returns:
+        str: ServiceTitan App Key
 
-  Raises:
-      KeyError: If the APP_KEY is not found in the connection configuration
-  """
-  app_key = conn['SERVICETITAN_APP_KEY']
-  return app_key
+    Raises:
+        KeyError: If the APP_KEY is not found in the connection configuration
+    """
+    app_key = conn["SERVICETITAN_APP_KEY"]
+    return app_key
+
 
 def get_tenant_id(conn):
-  """Fetches Tenant ID from the connection configuration.
+    """Fetches Tenant ID from the connection configuration.
 
-  Retrieves the TENANT_ID entry from the connection object.
+    Retrieves the TENANT_ID entry from the connection object.
 
-  Args:
-      conn: Dictionary containing the credential configuration
+    Args:
+        conn: Dictionary containing the credential configuration
 
-  Returns:
-      str: ServiceTitan Tenant ID
+    Returns:
+        str: ServiceTitan Tenant ID
 
-  Raises:
-      KeyError: If the TENANT_ID is not found in the connection configuration
-  """
-  tenant_id = conn['SERVICETITAN_TENANT_ID']
-  return tenant_id 
+    Raises:
+        KeyError: If the TENANT_ID is not found in the connection configuration
+    """
+    tenant_id = conn["SERVICETITAN_TENANT_ID"]
+    return tenant_id
+
 
 def get_auth_headers(conn):
-  """Generates the Authentication Headers for each API request.
+    """Generates the Authentication Headers for each API request.
 
-  Creates a dictionary that includes the auth token and app key formatted 
-  to create the authentication headers required by the ServiceTitan API.
+    Creates a dictionary that includes the auth token and app key formatted
+    to create the authentication headers required by the ServiceTitan API.
 
-  Args:
-      conn: Dictionary containing the credential configuration
+    Args:
+        conn: Dictionary containing the credential configuration
 
-  Returns:
-      dict: Dictionary containing Authorization and ST-App-Key headers
+    Returns:
+        dict: Dictionary containing Authorization and ST-App-Key headers
 
-  Raises:
-      requests.HTTPError: If authentication token retrieval fails
-      KeyError: If required credentials are missing
-      
-  Examples:
-      >>> headers = get_auth_headers(conn)
-      >>> # headers = {
-      >>> #     "Authorization": "Bearer your_token_here",
-      >>> #     "ST-App-Key": "your_app_key_here"
-      >>> # }
-  """
-  return {
-      "Authorization": get_auth_token(conn),
-      "ST-App-Key": get_app_key(conn)
-  }
+    Raises:
+        requests.HTTPError: If authentication token retrieval fails
+        KeyError: If required credentials are missing
+
+    Examples:
+        >>> headers = get_auth_headers(conn)
+        >>> # headers = {
+        >>> #     "Authorization": "Bearer your_token_here",
+        >>> #     "ST-App-Key": "your_app_key_here"
+        >>> # }
+    """
+    return {
+        "Authorization": f"Bearer {get_auth_token(conn)}",
+        "ST-App-Key": get_app_key(conn),
+    }

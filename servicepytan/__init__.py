@@ -1,7 +1,7 @@
 """A high-level package for ineracting with the ServiceTitan API v2.
 
-ServicePytan provides an API for easily constructing requests to the ServiceTitan API v2. 
-The `Endpoint` class is the primary means to constructing requests based on the organization detailed 
+ServicePytan provides an API for easily constructing requests to the ServiceTitan API v2.
+The `Endpoint` class is the primary means to constructing requests based on the organization detailed
 on developer site.
 
   Resources:
@@ -14,14 +14,18 @@ on developer site.
 """
 
 __author__ = """Elliot Palmer"""
-__email__ = 'elliot@ecoplumbers.com'
-__version__ = '0.3.2'
+__email__ = "elliot@ecoplumbers.com"
+__version__ = "0.3.2"
 
 # MODULES
-import requests
-import json
-
 from servicepytan.requests import Endpoint
 from servicepytan.reports import Report
 from servicepytan.data import DataService
-from servicepytan._dates import _convert_date_to_api_format
+from servicepytan.auth import servicepytan_connect
+
+__all__ = [
+    "Endpoint",
+    "Report",
+    "DataService",
+    "servicepytan_connect",
+]
