@@ -3,116 +3,205 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-servicepytan
-========================================
-A Python library for interacting with the ServiceTitan API v2
-https://developer.servicetitan.io/
+ServicePytan
+============================================
 
-Pre-Requisites
---------------
+**A comprehensive Python library for interacting with the ServiceTitan API v2**
 
-Before you can use :code:`servicepytan`, you need to create and authorize your API application. The following link will walk you through the setup process.
+ServicePytan provides a simple, Pythonic interface to the ServiceTitan API, making it easy to retrieve data, 
+manage reports, and integrate ServiceTitan with your applications. Built with developers in mind, it handles 
+authentication, pagination, rate limiting, and provides both low-level endpoint access and high-level 
+convenience methods.
 
-* :doc:`ServicePytan Pre-Requisites <./prerequisites>`  
+.. note::
+   **Current Version: 0.3.2** - This documentation covers all features available in the latest release.
 
-Installing ServicePytan
------------------------
+Key Features
+------------
 
-Recommended, create a virtual environment::
+✅ **Simple Authentication** - Multiple configuration options including JSON files, environment variables, and direct parameters
 
-   # MacOS / Linux
-   python -m venv .venv
-   source ./.venv/bin/activate
+✅ **Environment Support** - Switch between production and integration environments seamlessly  
 
-   # Windows
-   python -m venv .venv
-   ./.venv/Scripts/activate
+✅ **Comprehensive API Coverage** - Access any ServiceTitan API endpoint with the flexible Endpoint class
 
-Install ServicePython from Github::
+✅ **High-Level Data Services** - Simplified methods for common data operations like retrieving jobs, customers, and invoices
+
+✅ **Advanced Reporting** - Full support for ServiceTitan's custom reports with automatic pagination
+
+✅ **Automatic Pagination** - Built-in handling of paginated responses with `get_all()` methods
+
+✅ **Error Handling** - Robust error handling with detailed logging and retry mechanisms
+
+✅ **Date/Time Management** - Intelligent timezone handling and date formatting
+
+Quick Start
+-----------
+
+Install ServicePytan::
 
    pip install servicepytan
 
-   # For the most up to date version
+   # For the latest development version
    pip install git+https://github.com/elliotpalmer/servicepytan
-   
-Create Configuration File
--------------------------
 
-Create your :code:`servicepytan_config.json` file in the root directory::
+Create a connection and make your first request::
+
+   import servicepytan
+
+   # Create connection (multiple options available - see Configuration section)
+   conn = servicepytan.auth.servicepytan_connect(config_file="config.json")
    
+   # Get a specific job
+   jobs_endpoint = servicepytan.Endpoint("jpm", "jobs", conn=conn)
+   job = jobs_endpoint.get_one(138517400)
+   
+   # Or use the simplified DataService
+   data_service = servicepytan.DataService(conn=conn)
+   recent_jobs = data_service.get_jobs_completed_between("2024-01-01", "2024-01-31")
+
+Prerequisites
+-------------
+
+Before using ServicePytan, you need:
+
+1. **ServiceTitan API Application** - Set up through the ServiceTitan Developer Portal
+2. **API Credentials** - Client ID, Client Secret, App ID, App Key, and Tenant ID
+3. **Python 3.6+** - ServicePytan supports Python 3.6 and higher
+
+For detailed setup instructions, see:
+
+* :doc:`ServicePytan Prerequisites <./prerequisites>`  
+
+Installation & Configuration
+----------------------------
+
+ServicePytan offers flexible configuration options to suit different deployment scenarios:
+
+**JSON Configuration File** (Recommended for development)::
+
    {
-      "SERVICETITAN_CLIENT_ID": "cid.hhmdjd1jk9nqwertyr5cl6t5u5r5",
-      "SERVICETITAN_CLIENT_SECRET": "cs2.yjnblmqpfiuzjyqwerty5gc28a35qabzo1qsss2l3fll5st64tgrxjxz",
-      "SERVICETITAN_APP_ID": "12abc346skeg",
-      "SERVICETITAN_APP_KEY": "ak1.qey12fgjhnch03lsm",
+      "SERVICETITAN_CLIENT_ID": "cid.example123",
+      "SERVICETITAN_CLIENT_SECRET": "cs2.example456", 
+      "SERVICETITAN_APP_ID": "12345",
+      "SERVICETITAN_APP_KEY": "ak1.example789",
       "SERVICETITAN_TENANT_ID": "1234567890",
-      "SERVICETITAN_TIMEZONE": ""
+      "SERVICETITAN_TIMEZONE": "America/New_York",
+      "SERVICETITAN_API_ENVIRONMENT": "production"
    }
 
-Starting with >=0.3.0 there are addtioanl configuration options available. See :doc:`ServicePytan Configuration <./configuration>` for more information.
-1. Create a .env file in the root directory of your project. This file will be used to store your environment variables.
-2. By directly inputing the credentials into the :code:`servicepytan.auth.servicepytan_connect()` file, you are storing your credentials in plain text. This is not recommended.
-> :code:`servicepytan.auth.servicepytan_connect(app_id="", app_key="", client_id="", client_secret="", tenant_id="", timezone="")`
+**Environment Variables** (Recommended for production)::
 
-> NOTE: Remember to exclude this file from version control. (e.g. add to your :code:`.gitignore` file)
+   # Set in your .env file or environment
+   export SERVICETITAN_CLIENT_ID="your_client_id"
+   export SERVICETITAN_CLIENT_SECRET="your_client_secret"
+   export SERVICETITAN_APP_KEY="your_app_key"
+   export SERVICETITAN_TENANT_ID="your_tenant_id"
+   export SERVICETITAN_API_ENVIRONMENT="production"
 
-* :code:`SERVICETITAN_CLIENT_ID` - Find in :code:`Settings > Integrations > API Application Access > [App Name] > Edit`
-* :code:`SERVICETITAN_CLIENT_SECRET` - Generated one time with :code:`CLIENT ID`
-* :code:`SERVICETITAN_APP_ID` - Found in developers portal app definition
-* :code:`SERVICETITAN_APP_KEY` - Found in developers portal app definition
-* :code:`SERVICETITAN_TENANT_ID` - Found in developers portal app definition and integration settings
-* :code:`SERVICETITAN_TIMEZONE` - (Optional) - Timezone Abbreviation like :code:`America/New_York` as listed at https://timezonedb.com/time-zones
+**Direct Parameters** (For dynamic configurations)::
 
-Making Your First Request
--------------------------
+   conn = servicepytan.auth.servicepytan_connect(
+       client_id="your_client_id",
+       client_secret="your_client_secret",
+       app_key="your_app_key", 
+       tenant_id="your_tenant_id",
+       api_environment="production"
+   )
 
-   Return the Job object by Job ID::
+For complete configuration details, see:
 
-      import servicepytan
+* :doc:`Configuration Guide <./configuration>`
 
-      # API Endpoint: https://api.servicetitan.io/jpm/v2/tenant/{tenant}/jobs
-      # Folder: jpm, Endpoint: jobs
+API Access Patterns
+-------------------
 
-      # Create Connection Object. Note: This is a change from previous versions.
-      st_conn = servicepytan.auth.servicepytan_connect(config_file="./servicepytan_config.json")
-      
-      # Create API Object
-      st_jobs_endpoint = servicepytan.Endpoint("jpm", "jobs", conn=st_conn)
+ServicePytan provides three main patterns for accessing ServiceTitan data:
 
-      # Return the data for a specific job in ServiceTitan
-      # https://go.servicetitan.com/#/Job/Index/138517400
-      job_json = st_jobs_endpoint.get_one(138517400)
+**1. Endpoint Class** - Direct API access with full control::
 
-      # Print the data to the console
-      print(job_json)
+   # Access any ServiceTitan endpoint
+   endpoint = servicepytan.Endpoint("folder", "endpoint_name", conn=conn)
+   
+   # Get single record
+   record = endpoint.get_one(record_id)
+   
+   # Get all records with automatic pagination
+   all_records = endpoint.get_all(query_parameters)
+   
+   # Create, update, delete operations
+   new_record = endpoint.post(data)
+   updated_record = endpoint.patch(record_id, data)
 
-   Data will return something like::
-         
-      {
-         "id": 0,
-         "jobNumber": "string",
-         "customerId": 0,
-         "locationId": 0,
-         "jobStatus": "string",
-         "completedOn": "string",
-         ...
-         "soldById": 0,
-         "externalData": [{
-            "key": "string",
-            "value": "string"
-         }]
-      }
+**2. DataService Class** - Simplified high-level operations::
+
+   data_service = servicepytan.DataService(conn=conn)
+   
+   # Common data operations with intelligent defaults
+   jobs = data_service.get_jobs_completed_between("2024-01-01", "2024-01-31")
+   customers = data_service.get_customers_created_between("2024-01-01", "2024-01-31")
+   invoices = data_service.get_invoices_completed_between("2024-01-01", "2024-01-31")
+
+**3. Report Class** - Advanced custom reporting::
+
+   # Access ServiceTitan's custom reports
+   report = servicepytan.Report("operations", "report_id", conn=conn)
+   report.add_params("From", "2024-01-01")
+   report.add_params("To", "2024-01-31")
+   
+   # Get all report data with automatic pagination
+   report_data = report.get_all_data()
+
+Environment Support
+------------------
+
+ServicePytan supports both ServiceTitan environments:
+
+* **Production** - Live data environment (default)
+* **Integration** - Testing environment for development
+
+Switch environments easily::
+
+   # Production (default)
+   conn = servicepytan.auth.servicepytan_connect(api_environment="production")
+   
+   # Integration/Testing
+   conn = servicepytan.auth.servicepytan_connect(api_environment="integration")
 
 .. toctree::
    :maxdepth: 2
-   :caption: Table of Contents:
+   :caption: Getting Started:
 
    prerequisites
    configuration
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User Guide:
+
    examples
+   troubleshooting
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference:
+
    servicepytan
    reference
-   
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Deployment:
+
+   deployment
+
+Community & Support
+------------------
+
+* **GitHub Repository**: https://github.com/elliotpalmer/servicepytan
+* **Issue Tracker**: https://github.com/elliotpalmer/servicepytan/issues
+* **PyPI Package**: https://pypi.org/project/servicepytan/
+* **ServiceTitan Developer Docs**: https://developer.servicetitan.io/
 
 Indices and tables
 ==================

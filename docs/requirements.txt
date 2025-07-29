@@ -1,8 +1,16 @@
-requests==2.27.1
-python-dateutil==2.8.2
-pytz==2022.1
-myst-parser==0.18.0
-# Sphinx==4.5.0
-Sphinx==5.1.1
-furo==2022.6.21
-sphinx-rtd-theme==1.0.0
+# Core dependencies for ServicePytan (needed for autodoc)
+requests>=2.28.0
+python-dateutil>=2.8.2
+pytz>=2022.7
+python-dotenv>=0.19.0
+pyyaml>=6.0
+
+# Sphinx and documentation dependencies
+Sphinx>=5.3.0
+sphinx-rtd-theme>=1.2.0
+myst-parser>=0.18.1
+furo>=2022.12.7
+
+# Additional Sphinx extensions
+sphinx-autodoc-typehints>=1.19.0
+sphinx-copybutton>=0.5.0
