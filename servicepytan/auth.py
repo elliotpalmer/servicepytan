@@ -4,7 +4,14 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
-from enum import StrEnum
+
+try:
+    from enum import StrEnum
+except ImportError:
+    # Python < 3.11 compatibility
+    from enum import Enum
+    class StrEnum(str, Enum):
+        pass
 
 import logging
 
@@ -25,7 +32,7 @@ class ApiEnvironment(StrEnum):
     PRODUCTION  = "production",
     INTEGRATION = "integration"
 
-def get_auth_root_url(env: str) -> str:
+def get_auth_root_url(env: str = "production") -> str:
     """Get the authentication root URL for the specified environment.
     
     Args:
@@ -43,15 +50,14 @@ def get_auth_root_url(env: str) -> str:
         >>> get_auth_root_url(ApiEnvironment.INTEGRATION)
         'https://auth-integration.servicetitan.io'
     """
-    match env:
-        case ApiEnvironment.PRODUCTION:
+    if env == ApiEnvironment.PRODUCTION:
             return "https://auth.servicetitan.io"
-        case ApiEnvironment.INTEGRATION:
+    elif env == ApiEnvironment.INTEGRATION:
             return "https://auth-integration.servicetitan.io"
-        case _:
+    else:
             raise ValueError(f"Unknown ApiEnvironment: {env}")
 
-def get_api_root_url(env: str) -> str:
+def get_api_root_url(env: str = "production") -> str:
     """Get the API root URL for the specified environment.
     
     Args:
@@ -69,12 +75,11 @@ def get_api_root_url(env: str) -> str:
         >>> get_api_root_url(ApiEnvironment.INTEGRATION)
         'https://api-integration.servicetitan.io'
     """
-    match env:
-        case ApiEnvironment.PRODUCTION:
+    if env == ApiEnvironment.PRODUCTION:
             return "https://api.servicetitan.io"
-        case ApiEnvironment.INTEGRATION:
+    elif env == ApiEnvironment.INTEGRATION:
             return "https://api-integration.servicetitan.io"
-        case _:
+    else:
             raise ValueError(f"Unknown ApiEnvironment: {env}")
 
 
@@ -90,7 +95,7 @@ AUTH_VARIABLES = [
 ]
 
 def servicepytan_connect(
-    api_environment: str=ApiEnvironment.production,
+    api_environment: str=ApiEnvironment.PRODUCTION,
     app_key:str=None, tenant_id:str=None, client_id:str=None, 
     client_secret:str=None, app_id:str=None, timezone:str="UTC", config_file:str=None):
     """Establish connection configuration for ServiceTitan API.

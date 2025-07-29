@@ -1,4 +1,4 @@
-from servicepytan.utils import request_json, check_default_options, endpoint_url
+from servicepytan.utils import request_json, check_default_options, endpoint_url, request_contents
 
 import logging
 
@@ -282,3 +282,43 @@ class Endpoint:
       has_more = response["hasMore"]
     logger.info(f"Export Data Complete. {len(data)} rows exported.")
     return data
+  
+  def download(self, id, modifier="", filename=None):
+    """Download a file from the specified endpoint.
+    
+    Sends a GET request to download a file associated with the record.
+    The modifier can specify the type of file to download (e.g., "attachments").
+    
+    Args:
+        id: The unique identifier of the record
+        modifier: Optional sub-resource path for downloading specific files
+        filename: Optional filename to save the downloaded file as
+
+    Returns:
+        bytes: The content of the downloaded file
+        
+    Raises:
+        requests.HTTPError: If the API request fails
+        
+    Examples:
+        >>> endpoint = Endpoint("forms", "jobs/attachment", conn)
+        >>> file_content = endpoint.download("12345678")
+    """
+    VALID_ENDPOINTS = ["attachments", "jobs/attachment", "images"]
+
+    if not id:
+        raise ValueError("ID must be provided to download a file.")
+
+    if self.endpoint not in VALID_ENDPOINTS:
+        ERROR_MESSAGE = f"Download method is not supported for endpoint '{self.endpoint}'. Valid endpoints are: {', '.join(VALID_ENDPOINTS)}."
+        logger.error(ERROR_MESSAGE)
+        raise ValueError(ERROR_MESSAGE)
+
+    url = endpoint_url(self.folder, self.endpoint, id=id, modifier=modifier, conn=self.conn)
+    file_bytes = request_contents(url, options={}, conn=self.conn)
+    
+    if filename:
+        with open(filename, "wb") as f:
+            f.write(file_bytes)
+
+    return file_bytes

@@ -211,3 +211,26 @@ def request_json_with_retry(url, options={}, payload="", conn=None, request_type
         response = request_json_with_retry(url, options=options, payload=payload, conn=conn, request_type=request_type, json_payload=json_payload)
   
   return response
+
+def request_contents(url, options={}, conn=None):
+  """Fetches the contents of a URL with optional query parameters.
+
+  Args:
+      url: The complete URL for the API request
+      options: Dictionary of query parameters to add to the URL
+      conn: Dictionary containing the credential configuration
+
+  Returns:
+      dict: JSON response from the API
+
+  Raises:
+      requests.HTTPError: If the API request fails
+  """
+  response = requests.get(url, params=options, headers=get_auth_headers(conn))
+  response.raise_for_status()
+  
+  if response.status_code != requests.codes.ok:
+    logger.error(f"Error fetching contents (url={url}, options={options}): {response.text}")
+    response.raise_for_status()
+
+  return response.content
