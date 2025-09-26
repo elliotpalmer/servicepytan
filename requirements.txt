@@ -1,0 +1,11 @@
+# Core dependencies for ServicePytan
+Click>=7.0
+requests
+python-dateutil
+pytz
+python-dotenv
+pyyaml
+
+# Data analysis dependencies (optional)
+pandas>=2.3.1
+numpy>=1.24.0
