@@ -4,7 +4,7 @@ servicepytan
 
 
 .. image:: https://img.shields.io/pypi/v/servicepytan.svg
-        :target: https://pypi.python.org/pypi/servicepytan
+        :target: https://pypi.org/pypi/servicepytan
 
 .. image:: https://img.shields.io/travis/elliotpalmer/servicepytan.svg
         :target: https://travis-ci.com/elliotpalmer/servicepytan
@@ -13,11 +13,15 @@ servicepytan
         :target: https://servicepytan.readthedocs.io/en/latest/?version=latest
         :alt: Documentation Status
 
-
-
+.. image:: https://img.shields.io/pypi/pyversions/servicepytan.svg
+        :target: https://pypi.org/pypi/servicepytan
 
 Python Library to make it easier to interact with the ServiceTitan API v2
 
+Requirements
+-----------
+
+* Python 3.9 or higher
 
 * Free software: MIT license
 * Documentation: https://servicepytan.readthedocs.io.
@@ -28,6 +32,19 @@ Features
 
 * Simple Syntax for getting data from standard RESTful endpoints from ServiceTitan
 * Ability to extract custom report data and automatically make calls for additional data
+
+Installation
+-----------
+
+Basic installation:
+.. code-block:: bash
+
+    pip install servicepytan
+
+For development:
+.. code-block:: bash
+
+    pip install servicepytan[dev]
 
 Credits
 -------
