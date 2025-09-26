@@ -14,3 +14,4 @@ furo>=2022.12.7
 # Additional Sphinx extensions
 sphinx-autodoc-typehints>=1.19.0
 sphinx-copybutton>=0.5.0
+linkify-it-py>=2.0.0
