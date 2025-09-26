@@ -19,7 +19,7 @@ servicepytan
 Python Library to make it easier to interact with the ServiceTitan API v2
 
 Requirements
------------
+------------
 
 * Python 3.9 or higher
 
@@ -34,7 +34,7 @@ Features
 * Ability to extract custom report data and automatically make calls for additional data
 
 Installation
------------
+------------
 
 Basic installation:
 .. code-block:: bash
