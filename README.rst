@@ -22,7 +22,6 @@ Requirements
 -----------
 
 * Python 3.9 or higher
-* For data analysis features: pandas 2.3.1+ and numpy 1.24.0+
 
 * Free software: MIT license
 * Documentation: https://servicepytan.readthedocs.io.
@@ -33,7 +32,6 @@ Features
 
 * Simple Syntax for getting data from standard RESTful endpoints from ServiceTitan
 * Ability to extract custom report data and automatically make calls for additional data
-* Optional pandas integration for advanced data analysis and manipulation
 
 Installation
 -----------
@@ -42,11 +40,6 @@ Basic installation:
 .. code-block:: bash
 
     pip install servicepytan
-
-With data analysis support (includes pandas):
-.. code-block:: bash
-
-    pip install servicepytan[analysis]
 
 For development:
 .. code-block:: bash

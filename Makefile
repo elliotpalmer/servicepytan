@@ -1,4 +1,4 @@
-.PHONY: clean clean-build clean-pyc clean-test coverage dist docs help install lint lint/flake8 test-pandas install-pandas
+.PHONY: clean clean-build clean-pyc clean-test coverage dist docs help install lint lint/flake8
 .DEFAULT_GOAL := help
 
 define BROWSER_PYSCRIPT
@@ -55,9 +55,6 @@ lint: lint/flake8 ## check style
 test: ## run tests quickly with the default Python
 	python setup.py test
 
-test-pandas: ## run pandas integration tests
-	python -m pytest tests/test_pandas_integration.py -v
-
 test-all: ## run tests on every Python version with tox
 	tox
 
@@ -88,9 +85,6 @@ dist: clean ## builds source and wheel package
 
 install: clean ## install the package to the active Python's site-packages
 	python setup.py install
-
-install-pandas: clean ## install the package with pandas support
-	pip install -e .[analysis]
 
 install-dev: clean ## install the package in development mode with all dependencies
 	pip install -e .[dev]
