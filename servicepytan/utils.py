@@ -39,8 +39,9 @@ def request_json(url, options={}, payload={}, conn=None, request_type="GET", jso
   response = requests.request(request_type, url, data=payload, headers=headers, params=options, json=json_payload)
   if response.status_code != requests.codes.ok:
     logger.error(f"Error fetching data (url={url}, heads={headers}, data={payload}, json={json_payload}): {response.text}")
-    response.raise_for_status()
-
+    if response.status_code != 429:
+      response.raise_for_status()
+      
   return response.json()
 
 def check_default_options(options):
