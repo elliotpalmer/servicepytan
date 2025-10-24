@@ -170,7 +170,7 @@ def sleep_with_countdown(sleep_time):
       >>> # Displays: "Trying again in 30 seconds...", "29 seconds...", etc.
   """
   for i in range(sleep_time, 0, -1):
-      logger.info("Trying again in {} seconds...       ".format(i),end='\r')
+      logger.info("Trying again in {} seconds...       ".format(i))
       time.sleep(1)
   logger.info("")
   pass
